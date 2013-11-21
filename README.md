@@ -37,13 +37,17 @@ In /wesnoth-old/src/SConscript: You must add
     
 to the list of wesnoth sources, with the other ai.cpp files, to get scons to build it.
 
-In /wesnoth-old/SConstruct: You must also change the single line 341:
+In /wesnoth-old/SConstruct: You must also add two lines, at line 341:
 
-        conf.CheckOgg() or Warning("Client prerequesites are not met. wesnoth, cutter and exploder cannot be built.")
+        conf.CheckLib("libc") and \
+        conf.CheckLib("liblpsolve55") and \
 
-to the two lines:
+in between the lines
 
-        conf.CheckOgg() and \
-        conf.CheckLib("liblpsolve55") or Warning("Client prerequisites are not met. wesnoth, cutter and exploder cannot be built.")
+        conf.CheckSDL("SDL_image", require_version = '1.2.0') and \
+        conf.CheckOgg() or Warning("Client prerequisites are not met. wesnoth, cutter and exploder cannot be built.")
 
-to ensure that lp_solve lib is statically linked into wesnoth.
+to ensure that lp_solve lib, and its dependency libc, are statically linked into wesnoth. If you are running linux you have some version of libc.
+
+I believe liblpsolve55 requires glibc version 2.2.5, which is very old. Probably whatever you have is fine. I am not going to fuss around with this in the SConstruct script,
+in part because I have ubuntu I have something called EGLIB which is a fork of glib, and it seems to work fine, so the dependency is complicated.
