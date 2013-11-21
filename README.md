@@ -1,10 +1,27 @@
 Wesnoth_MCLP_AI
 ===============
 
-An AI project for wesnoth. Intended to be installed to /src/ai/, the only core file being modified is /ai/registry.cpp. 
+An AI project for wesnoth. 
+
+Building
+========
+
+Intended to be installed to /src/ai/, the only core file being modified is /ai/registry.cpp. 
 
 You must also add "    ai/lp/ai.cpp" to the list of wesnoth sources in /src/SConscript to get scons to build it.
+You must also change the single line 341:
 
+        conf.CheckOgg() or Warning("Client prerequesites are not met. wesnoth, cutter and exploder cannot be built.")
+
+to the two lines:
+
+        conf.CheckOgg() and \
+        conf.CheckLib("liblpsolve55") or Warning("Client prerequisites are not met. wesnoth, cutter and exploder cannot be built.")
+
+in your /wesnoth-old/SConstruct script, to ensure that you include the lp_solve lib.
+
+What's the deal?
+================
 
 The idea is that the AI should evaluate the quality of a hypothetical position by running monte carlo simulations. 
 During these monte carlo simulations, all parties will be controlled by an efficient and aggressive AI, which seeks
