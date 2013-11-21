@@ -9,6 +9,7 @@ to kill as much gold as possible in its turn. To do this, it solves a series of 
 state, hopefully very quickly. The linear programs seek to approximately determine
 
 1) What is the enemy unit that is easiest for me to kill?
+
 2) What is the opportunity cost of attacking with a particular unit?
 
 The LP_ai heuristic is to attack the unit which can be most easily killed using all adjacent slots, using the 
