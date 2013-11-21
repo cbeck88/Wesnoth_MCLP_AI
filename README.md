@@ -29,7 +29,7 @@ Building
 
 I assume that you already have the ability to compile wesnoth from source.
 
-MCLP AI is intended to be installed (copied) to /src/ai/, the only core file being modified is /ai/registry.cpp. 
+MCLP AI is intended to be installed (copied) to /src/ai/, the only core file being modified is /ai/registry.cpp. One line is added to register my AI factories.
 
 In /wesnoth-old/src/SConscript: You must add 
 
