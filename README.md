@@ -4,7 +4,7 @@ Wesnoth_MCLP_AI
 An AI project for wesnoth. 
 
 Building
-========
+--------
 
 Intended to be installed to /src/ai/, the only core file being modified is /ai/registry.cpp. 
 
@@ -14,7 +14,7 @@ In /wesnoth-old/src/SConscript: You must add
     
 to the list of wesnoth sources, with the other ai.cpp files, to get scons to build it.
 
-In /wesnoth-old/SConcstruct: You must also change the single line 341:
+In /wesnoth-old/SConstruct: You must also change the single line 341:
 
         conf.CheckOgg() or Warning("Client prerequesites are not met. wesnoth, cutter and exploder cannot be built.")
 
@@ -26,7 +26,7 @@ to the two lines:
 to ensure that you include the lp_solve lib.
 
 What's the deal?
-================
+----------------
 
 The idea is that the AI should evaluate the quality of a hypothetical position by running monte carlo simulations. 
 During these monte carlo simulations, all parties will be controlled by an efficient and aggressive AI, which seeks
@@ -41,6 +41,8 @@ The LP_ai heuristic is to *attack the unit which can be most easily killed using
 unit from the optimal solution which is otherwise the least useful first*. After we see if we got our hits, we reevaluate.
 
 The MCLP_ai is not written yet, but this is the one which is planned to use the results of MC simulations to make decisions.
+
+I may decide to write lua hooks to the Monte Carlo procedures, so that this idea can be reused in the future more easily.
 
 LP's are solved using the lp_solve library. I installed from a linux mint package *liblpsolve55-dev*, following instructions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>.
 
