@@ -3,6 +3,9 @@ Wesnoth_MCLP_AI
 
 An AI project for wesnoth. Intended to be installed to /src/ai/, the only core file being modified is /ai/registry.cpp. 
 
+You must also add "    ai/lp/ai.cpp" to the list of wesnoth sources in /src/SConscript to get scons to build it.
+
+
 The idea is that the AI should evaluate the quality of a hypothetical position by running monte carlo simulations. 
 During these monte carlo simulations, all parties will be controlled by an efficient and aggressive AI, which seeks
 to kill as much gold as possible in its turn. To do this, it solves a series of linear programs related to the game
