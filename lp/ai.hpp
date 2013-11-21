@@ -17,6 +17,7 @@
 #ifndef AI_LP_AI_HPP_INCLUDED
 #define AI_LP_AI_HPP_INCLUDED
 
+#include "../contexts.hpp"
 #include "../interface.hpp"
 
 #ifdef _MSC_VER
@@ -47,9 +48,9 @@ public:
 };*/
 
 /** A test to visualize the output of first LP we solve. */
-class lp_1_ai : public read_write_context_proxy, public interface {
+class lp_1_ai : public readwrite_context_proxy, public interface {
 public:
-        lp_1_ai(readonly_context &context, const config &cfg);
+        lp_1_ai(readwrite_context &context, const config &cfg);
 
         void new_turn();
         void play_turn();

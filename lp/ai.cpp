@@ -8,6 +8,7 @@
 #include "../actions.hpp"
 #include "../manager.hpp"
 
+#include "../../attack_prediction.hpp"
 #include "../../actions/attack.hpp"
 #include "../../array.hpp"
 #include "../../dialogs.hpp"
@@ -23,7 +24,6 @@
 #include "../../pathfind/pathfind.hpp"
 
 #include <boost/foreach.hpp>
-#include "lp_lib.h"
 
 #include <iterator>
 #include <algorithm>
@@ -40,6 +40,56 @@ static lg::log_domain log_ai("ai/general");
 //silence "inherits via dominance" warnings
 #pragma warning(disable:4250)
 #endif
+
+#ifndef REAL 
+   #define REAL double
+#endif
+
+typedef struct _lprec      lprec;
+
+namespace lp_solve
+{
+    extern "C"
+    {
+        lprec* make_lp(int, int);        
+        unsigned char set_add_rowmode(lprec*, unsigned char);
+        unsigned char add_constraintex(lprec*,int,REAL*,int*, int, REAL);
+        unsigned char set_binary(lprec*,int, unsigned char);
+        unsigned char set_obj(lprec*,int,REAL);
+        void set_maxim(lprec*);
+        void set_verbose(lprec*, int);
+        int solve(lprec*);
+        unsigned char get_variables(lprec*, REAL*);
+        void delete_lp(lprec*);
+
+        //codes for ADD_CONSTRAINT
+        int LE = 1;
+        int GE = 2;
+        int EQ = 3;
+
+        //codes for SET_BINARY
+        unsigned char TRUE = 1;
+        unsigned char FALSE = 0;
+
+        //codes for SET_VERBOSE
+        int NEUTRAL = 0;
+        int CRITICAL = 1;
+        int SEVERE = 2;
+        int IMPORTANT = 3;
+        int NORMAL = 4;
+        int DETAILED = 5;
+        int FULL = 6;
+
+        //codes for SOLVE
+        int NOMEMORY = -2;
+        int OPTIMAL = 0;
+        int SUBOPTIMAL = 1;
+        int INFEASIBLE = 2;
+        int UNBOUNDED = 3;
+        int DEGENERATE = 4;
+        int NUMFAILURE = 5;
+    }
+}
 
 namespace ai {
 
@@ -71,6 +121,12 @@ void lp_ai::play_turn()
 */
 // ======== Test ai's to visiualize LP output ===========
 
+lp_1_ai::lp_1_ai(readwrite_context &context, const config& /*cfg*/)
+{
+	init_readwrite_context_proxy(context);
+}
+
+
 std::string lp_1_ai::describe_self() const
 {
 	return "[lp_1_ai]";
@@ -95,41 +151,45 @@ void lp_1_ai::play_turn()
 
         typedef move_map::const_iterator Itor;
 
-        std::map<location,paths> possible_moves;
+        std::map<map_location,pathfind::paths> possible_moves;
         move_map srcdst, dstsrc;
         calculate_possible_moves(possible_moves,srcdst,dstsrc,false);
 
+	unit_map& units_ = *resources::units;
+        //gamemap& map_ = *resources::game_map;
 
         // for reference, LP_solve template file is here: http://lpsolve.sourceforge.net/5.5/formulate.htm
         lprec *lp;
         int Ncol = 0;
-        int *col, j, ret;
-        REAL *row;
+        int *col = NULL, j, ret;
+        //unsigned char ret;
+        REAL *row = NULL;
 
         //Each attacker destination "slot" becomes a row in LP since these are exclusive.
-        std::multimap<location, int> locMap;
-        //Each unit can only attack once so this becomes a row in LP as well.
-        std::multimap<unit, int> unitMap;
+        std::multimap<map_location, int> locMap;
+        //Each unit can only attack once so this becomes a row in LP as well. Key will be unit.underlying_id();
+        std::multimap<size_t, int> unitMap;
 
-        typedef std::multimap<location,int>::iterator locItor;
-        typedef std::multimap<unit,int>::iterator unitItor;
+        typedef std::multimap<map_location,int>::iterator locItor;
+        typedef std::multimap<size_t,int>::iterator unitItor;
 
-        //i->first will be loc, and i->second will be unit, which is enemy
-        for(unit_map::const_iterator i = get_info().units.begin(); i != get_info().units.end(); ++i) {
-            if(current_team().is_enemy(i->second.side()) {        
-                 location adjacent_tiles[6];
-                 get_adjacent_tiles(i->first,adjacent_tiles);
+        map_location adjacent_tiles[6];
+
+        //i sis a unit iterator old info: i->first will be loc, and i->second will be unit, which is enemy
+        for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
+            if(current_team().is_enemy(i->side())) {        
+                 get_adjacent_tiles(i->get_location(),adjacent_tiles);
                  for(size_t n = 0; n != 6; ++n) {
                      std::pair<Itor,Itor> range = dstsrc.equal_range(adjacent_tiles[n]);
                      //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
                      while(range.first != range.second) {
                          Ncol++;
-                         locMap.emplace(adjacent_tiles[n],Ncol);
+                         locMap.insert(std::make_pair<map_location,int> (adjacent_tiles[n],Ncol));
 
-                         const unit_map::const_iterator un = get_info().units.find(src);
-                         assert(un != get_info().units.end());
+                         const unit_map::const_iterator un = units_.find(range.first->second);
+                         assert(un != units_.end());
 
-                         unitMap.emplace(un->second, Ncol);
+                         unitMap.insert(std::make_pair<size_t,int> (un->underlying_id(), Ncol));
 
                          ++range.first;
                      }
@@ -138,14 +198,14 @@ void lp_1_ai::play_turn()
         }
 
         //Now we have the constraint matrix for our LP. Start with 0 rows and Ncol cols (variables)
-        lp = make_lp(0,Ncol);
+        lp = lp_solve::make_lp(0,Ncol);
         assert(lp != NULL);
 
         //Going to add rows (constraints) one at a time.
-        set_add_rowmode(lp, true);
+        lp_solve::set_add_rowmode(lp, true);
 
         //Iterate over the "slots" and add a 1 in each column for an attack that goes through this slot
-        location l;
+        map_location l;
         std::pair<locItor, locItor> lrange;
         size_t cnt;
         for (locItor i = locMap.begin(); i != locMap.end(); i = locMap.upper_bound(i->first))
@@ -154,8 +214,8 @@ void lp_1_ai::play_turn()
             cnt = locMap.count(l);
 
             j = 0;
-            col = (int*) malloc(cnt * size_of(*col));
-            row = (REAL*) malloc(cnt * size_of(*row));
+            col = (int*) malloc(cnt * sizeof(*col));
+            row = (REAL*) malloc(cnt * sizeof(*row));
 
             lrange = locMap.equal_range(l);
 
@@ -166,25 +226,23 @@ void lp_1_ai::play_turn()
                 ++lrange.first;
             }
 
-            ret = add_constraintex(lp,j,row,col, LE, 1);
+            ret = lp_solve::add_constraintex(lp,j,row,col, lp_solve::LE, 1);
             assert(ret);
 
             free(col);
-            free(free);
+            free(row);
         }
 
         //Iterate over the "units" and add a 1 in each column for an attack that this unit could make
-        unit u;
         std::pair<unitItor, unitItor> urange;
-        size_t cnt;
         for (unitItor i = unitMap.begin(); i != unitMap.end(); i = unitMap.upper_bound(i->first))
         {
-            u = i->first;
+            size_t u = i->first;
             cnt = unitMap.count(u);
 
             j = 0;
-            col = (int*) malloc(cnt * size_of(*col));
-            row = (REAL*) malloc(cnt * size_of(*row));
+            col = (int*) malloc(cnt * sizeof(*col));
+            row = (REAL*) malloc(cnt * sizeof(*row));
 
             urange = unitMap.equal_range(u);
 
@@ -195,29 +253,30 @@ void lp_1_ai::play_turn()
                 ++urange.first;
             }
 
-            ret = add_constraintex(lp,j,row,col, LE, 1);
+            ret = lp_solve::add_constraintex(lp,j,row,col, lp_solve::LE, 1);
             assert(ret);
 
             free(col);
             free(row);
         }
 
+        lp_solve::set_add_rowmode(lp,lp_solve::FALSE);
         j=0;
 
-        for(unit_map::const_iterator i = get_info().units.begin(); i != get_info().units.end(); ++i) {
-            if(current_team().is_enemy(i->second.side()) {        
-                 location adjacent_tiles[6];
-                 get_adjacent_tiles(i->first,adjacent_tiles);
+        for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
+            if(current_team().is_enemy(i->side())) {        
+                 //location adjacent_tiles[6];
+                 get_adjacent_tiles(i->get_location(),adjacent_tiles);
                  for(size_t n = 0; n != 6; ++n) {
                      std::pair<Itor,Itor> range = dstsrc.equal_range(adjacent_tiles[n]);
                      //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
                      while(range.first != range.second) {
-                         const location& dst = range.first->first;
-                         const location& src = range.first->second;
+                         const map_location& dst = range.first->first;
+                         const map_location& src = range.first->second;
                          //these are dst and src for the attacking unit
 
-                         const unit_map::const_iterator un = get_info().units.find(src);
-                         assert(un != get_info().units.end());
+                         const unit_map::const_iterator un = units_.find(src);
+                         assert(un != units_.end());
 
                          //const int chance_to_hit = un->second.defense_modifier(get_info().map,terrain);
 
@@ -230,18 +289,17 @@ void lp_1_ai::play_turn()
 					               double aggression = 0.0, const combatant *prev_def = NULL,
 					               const unit* attacker_ptr=NULL);
                               */
-                              battle_context bc_ = new battle_context(get_info().units, dst, i->first, -1, -1, 0.0, NULL, &un->second);
+                              battle_context *bc_ = new battle_context(units_, dst, i->get_location(), -1, -1, 0.0, NULL, &(*un));
 
                               //This code later in attack::perform() in attack.cpp
                               combatant attacker(bc_->get_attacker_stats());
                               combatant defender(bc_->get_defender_stats());
                               attacker.fight(defender,false);
-                              const double gold_inflicted = (static_cast<double>(i->second.hitpoints()) - defender.average_hp()) * i->second.cost() / i->second.max_hitpoints();
-                              
+                              const REAL gold_inflicted = (static_cast<double>(i->hitpoints()) - defender.average_hp()) * i->cost() / i->max_hitpoints();
+                         
+                              lp_solve::set_binary(lp, j, lp_solve::TRUE); //set all variables to binary
+                              lp_solve::set_obj(lp, j++, gold_inflicted);
                          }
-
-                         set_binary(lp, j, TRUE); //set all variables to binary
-                         set_obj(lp, j++, (REAL) gold_inflicted);
 
                          ++range.first;
                      }
@@ -249,10 +307,10 @@ void lp_1_ai::play_turn()
             }
         }
 
-        set_maxim(lp);
-        set_verbose(lp, IMPORTANT);
-        ret = solve(lp);
-        assert(ret == OPTIMAL);
+        lp_solve::set_maxim(lp);
+        lp_solve::set_verbose(lp, lp_solve::IMPORTANT);
+        ret = lp_solve::solve(lp);
+        assert(ret == lp_solve::OPTIMAL);
 
 /*  if(ret == 0) {
     // a solution is calculated, now lets get some results 
@@ -261,7 +319,9 @@ void lp_1_ai::play_turn()
     printf("Objective value: %f\n", get_objective(lp));
 
     // variable values */
-    get_variables(lp, row);
+    row = (REAL*) malloc(Ncol * sizeof(*row));
+    ret = lp_solve::get_variables(lp, row);
+    assert(ret == lp_solve::TRUE);
 /*    for(j = 0; j < Ncol; j++)
       printf("%s: %f\n", get_col_name(lp, j + 1), row[j]);
 
@@ -269,20 +329,19 @@ void lp_1_ai::play_turn()
   }
 */
         j = 0;
-        for(unit_map::const_iterator i = get_info().units.begin(); i != get_info().units.end(); ++i) {
-            if(current_team().is_enemy(i->second.side()) {        
-                 location adjacent_tiles[6];
-                 get_adjacent_tiles(i->first,adjacent_tiles);
+        for(unit_map::const_iterator i = units_.begin(); i != units_.end(); ++i) {
+            if(current_team().is_enemy(i->side())) {        
+                 get_adjacent_tiles(i->get_location(),adjacent_tiles);
                  for(size_t n = 0; n != 6; ++n) {
                      std::pair<Itor,Itor> range = dstsrc.equal_range(adjacent_tiles[n]);
                      //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
                      while(range.first != range.second) {
-                         const location& dst = range.first->first;
-                         const location& src = range.first->second;
+                         const map_location& dst = range.first->first;
+                         const map_location& src = range.first->second;
                          //these are dst and src for the attacking unit
 
-                         const unit_map::const_iterator un = get_info().units.find(src);
-                         assert(un != get_info().units.end());
+                         const unit_map::const_iterator un = units_.find(src);
+                         assert(un != units_.end());
 
                          if (row[j++] > .01) {execute_move_action(src, dst, false, true);}
                          ++range.first;
@@ -294,12 +353,12 @@ void lp_1_ai::play_turn()
   /* free allocated memory */
   if(row != NULL)
     free(row);
-  if(colno != NULL)
+  if(col != NULL)
     free(col);
 
   if(lp != NULL) {
     /* clean up such that all used memory by lpsolve is freed */
-    delete_lp(lp);
+    lp_solve::delete_lp(lp);
   }
 
 }
