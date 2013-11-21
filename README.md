@@ -1,7 +1,7 @@
 Wesnoth_MCLP_AI
 ===============
 
-An AI project for wesnoth. Intended to be installed to /src/ai/, the only core file being modified is the registry. You must also have the lp_solve_5.5_dev library, which is statically linked.
+An AI project for wesnoth. Intended to be installed to /src/ai/, the only core file being modified is registry.cpp. You must also have the lp_solve_5.5_dev library, which is statically linked.
 
 The idea is that the AI should evaluate the quality of a hypothetical position by running monte carlo simulations. 
 During these monte carlo simulations, all parties will be controlled by an efficient and aggressive AI, which seeks
