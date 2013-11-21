@@ -8,8 +8,13 @@ Building
 
 Intended to be installed to /src/ai/, the only core file being modified is /ai/registry.cpp. 
 
-You must also add "    ai/lp/ai.cpp" to the list of wesnoth sources in /src/SConscript to get scons to build it.
-You must also change the single line 341:
+In /wesnoth-old/src/SConscript: You must add 
+
+    ai/lp/ai.cpp 
+    
+to the list of wesnoth sources, with the other ai.cpp files, to get scons to build it.
+
+In /wesnoth-old/SConcstruct: You must also change the single line 341:
 
         conf.CheckOgg() or Warning("Client prerequesites are not met. wesnoth, cutter and exploder cannot be built.")
 
@@ -18,7 +23,7 @@ to the two lines:
         conf.CheckOgg() and \
         conf.CheckLib("liblpsolve55") or Warning("Client prerequisites are not met. wesnoth, cutter and exploder cannot be built.")
 
-in your /wesnoth-old/SConstruct script, to ensure that you include the lp_solve lib.
+to ensure that you include the lp_solve lib.
 
 What's the deal?
 ================
