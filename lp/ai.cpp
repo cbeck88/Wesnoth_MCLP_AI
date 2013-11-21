@@ -62,6 +62,9 @@ namespace lp_solve
         unsigned char get_variables(lprec*, REAL*);
         void delete_lp(lprec*);
 
+        unsigned char write_LP(lprec*, FILE*);
+        unsigned char write_lp(lprec*, char*);
+
         //codes for ADD_CONSTRAINT
         int LE = 1;
         int GE = 2;
@@ -309,7 +312,12 @@ void lp_1_ai::play_turn()
 
         lp_solve::set_maxim(lp);
         lp_solve::set_verbose(lp, lp_solve::IMPORTANT);
+
+        LOG_AI << "Here's my LP in file temp.lp:\n";
+        ret = lp_solve::write_lp(lp, "temp.lp");
+        LOG_AI << "Solving...\n";
         ret = lp_solve::solve(lp);
+        LOG_AI << "Done.\n";
         assert(ret == lp_solve::OPTIMAL);
 
 /*  if(ret == 0) {
