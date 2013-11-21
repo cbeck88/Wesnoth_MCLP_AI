@@ -27,7 +27,9 @@ LP's are solved using the lp_solve library. I installed from a linux mint packag
 Building
 --------
 
-Intended to be installed to /src/ai/, the only core file being modified is /ai/registry.cpp. 
+I assume that you already have the ability to compile wesnoth from source.
+
+MCLP AI is intended to be installed (copied) to /src/ai/, the only core file being modified is /ai/registry.cpp. 
 
 In /wesnoth-old/src/SConscript: You must add 
 
@@ -44,4 +46,4 @@ to the two lines:
         conf.CheckOgg() and \
         conf.CheckLib("liblpsolve55") or Warning("Client prerequisites are not met. wesnoth, cutter and exploder cannot be built.")
 
-to ensure that you include the lp_solve lib.
+to ensure that lp_solve lib is statically linked into wesnoth.
