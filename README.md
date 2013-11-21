@@ -17,5 +17,6 @@ unit from the optimal solution which is otherwise the least useful first. After 
 
 The MCLP_ai will use montecarlo simulations driven by LP_ai to estimate whether it will win a dog fight.
 
-LP's are solved using the lp_solve library. I installed from a linux mint package liblpsolve55-dev, following instructions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>.
+LP's are solved using the lp_solve library. I installed from a linux mint package liblpsolve55-dev, following instructions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>
+If you are having trouble linking it: For me the package automatically put a library file liblpsolve55.a in /usr/lib/, and according to scons output, g++ is told to look for libraries there, so I didn't have to do anything. I don't know anything about SCONS though so if it doesn't work out of the box good luck :)
 
