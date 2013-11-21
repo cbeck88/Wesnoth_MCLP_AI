@@ -17,6 +17,5 @@ unit from the optimal solution which is otherwise the least useful first. After 
 
 The MCLP_ai will use montecarlo simulations driven by LP_ai to estimate whether it will win a dog fight.
 
-LP's are solved using the lp_solve library. I installed lp_solve from a linux mint package following instrunctions here:
-http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library 
+LP's are solved using the lp_solve library. I installed lp_solve from a linux mint package following instrunctions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>.
 
