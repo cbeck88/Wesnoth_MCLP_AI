@@ -3,9 +3,6 @@ Wesnoth_MCLP_AI
 
 An AI project for wesnoth. 
 
-What's the deal?
-----------------
-
 The idea is that the AI should evaluate the quality of a hypothetical position by running monte carlo simulations. 
 During these monte carlo simulations, all parties will be controlled by an efficient and aggressive AI, which seeks
 to kill as much gold as possible in its turn. To do this, it solves a series of linear programs related to the game
