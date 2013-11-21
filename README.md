@@ -3,28 +3,6 @@ Wesnoth_MCLP_AI
 
 An AI project for wesnoth. 
 
-Building
---------
-
-Intended to be installed to /src/ai/, the only core file being modified is /ai/registry.cpp. 
-
-In /wesnoth-old/src/SConscript: You must add 
-
-    ai/lp/ai.cpp 
-    
-to the list of wesnoth sources, with the other ai.cpp files, to get scons to build it.
-
-In /wesnoth-old/SConstruct: You must also change the single line 341:
-
-        conf.CheckOgg() or Warning("Client prerequesites are not met. wesnoth, cutter and exploder cannot be built.")
-
-to the two lines:
-
-        conf.CheckOgg() and \
-        conf.CheckLib("liblpsolve55") or Warning("Client prerequisites are not met. wesnoth, cutter and exploder cannot be built.")
-
-to ensure that you include the lp_solve lib.
-
 What's the deal?
 ----------------
 
@@ -48,3 +26,25 @@ LP's are solved using the lp_solve library. I installed from a linux mint packag
 
 *If you are having trouble linking it:* For me the package automatically put a library file liblpsolve55.a in /usr/lib/, and according to scons output, g++ is told to look for libraries there, so I didn't have to do anything. I don't know anything about SCONS though so if it doesn't work out of the box good luck :)
 
+
+Building
+--------
+
+Intended to be installed to /src/ai/, the only core file being modified is /ai/registry.cpp. 
+
+In /wesnoth-old/src/SConscript: You must add 
+
+    ai/lp/ai.cpp 
+    
+to the list of wesnoth sources, with the other ai.cpp files, to get scons to build it.
+
+In /wesnoth-old/SConstruct: You must also change the single line 341:
+
+        conf.CheckOgg() or Warning("Client prerequesites are not met. wesnoth, cutter and exploder cannot be built.")
+
+to the two lines:
+
+        conf.CheckOgg() and \
+        conf.CheckLib("liblpsolve55") or Warning("Client prerequisites are not met. wesnoth, cutter and exploder cannot be built.")
+
+to ensure that you include the lp_solve lib.
