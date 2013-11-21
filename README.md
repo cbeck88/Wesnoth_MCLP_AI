@@ -1,7 +1,7 @@
 Wesnoth_MCLP_AI
 ===============
 
-An AI project for wesnoth. Intended to be installed to /src/ai/, the only core file being modified is registry.cpp. You must also have the lp_solve_5.5_dev library, which is statically linked.
+An AI project for wesnoth. Intended to be installed to /src/ai/, the only core file being modified is registry.cpp. 
 
 The idea is that the AI should evaluate the quality of a hypothetical position by running monte carlo simulations. 
 During these monte carlo simulations, all parties will be controlled by an efficient and aggressive AI, which seeks
@@ -17,5 +17,5 @@ unit from the optimal solution which is otherwise the least useful first. After 
 
 The MCLP_ai will use montecarlo simulations driven by LP_ai to estimate whether it will win a dog fight.
 
-LP's are solved using the lp_solve library. I installed lp_solve from a linux mint package following instructions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>.
+LP's are solved using the lp_solve library. I installed from a linux mint package liblpsolve55-dev, following instructions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>.
 
