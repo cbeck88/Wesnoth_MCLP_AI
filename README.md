@@ -15,7 +15,7 @@ state, hopefully very quickly. The linear programs seek to approximately determi
 The LP_ai heuristic is to *attack the unit which can be most easily killed using all adjacent slots, using the 
 unit from the optimal solution which is otherwise the least useful first*. After we see if we got our hits, we reevaluate.
 
-The MCLP_ai is not written yet, I imagine that it will work at first a bit like candidate_ai but use LP_ai montecarlo simulations to generate scores.
+The MCLP_ai is not written yet, but this is the one which is planned to use the results of MC simulations to make decisions.
 
 LP's are solved using the lp_solve library. I installed from a linux mint package *liblpsolve55-dev*, following instructions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>.
 
