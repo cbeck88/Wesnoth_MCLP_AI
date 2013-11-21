@@ -48,7 +48,7 @@ static register_ai_factory<ai_composite> ai_factory_default("");
 static register_ai_factory<ai_composite> ai_default_ai_factory("default_ai");
 static register_ai_factory<idle_ai> ai_idle_ai_factory("idle_ai");
 static register_ai_factory<ai_composite> ai_composite_ai_factory("composite_ai");
-static register_ai_factory<lp_heuristic1_ai> ai_lp_heuristic1_ai("lp_heuristic1_ai");
+static register_ai_factory<lp_1_ai> ai_lp_1_ai("lp_1_ai");
 
 // =======================================================================
 // Engines

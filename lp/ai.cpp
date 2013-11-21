@@ -45,6 +45,7 @@ namespace ai {
 
 typedef util::array<map_location,6> adjacent_tiles_array;
 
+/*
 std::string lp_ai::describe_self() const
 {
 	return "[lp_ai]";
@@ -67,28 +68,28 @@ void lp_ai::play_turn()
 {
 	//game_events::fire("ai turn");
 }
-
+*/
 // ======== Test ai's to visiualize LP output ===========
 
-std::string lp_heuristic1_ai::describe_self() const
+std::string lp_1_ai::describe_self() const
 {
-	return "[lp_heuristic1_ai]";
+	return "[lp_1_ai]";
 }
 
 
-void lp_heuristic1_ai::new_turn()
+void lp_1_ai::new_turn()
 {
 }
 
 
-config lp_heuristic1_ai::to_config() const
+config lp_1_ai::to_config() const
 {
 	config cfg;
-	cfg["ai_algorithm"]= "lp_heuristic1_ai";
+	cfg["ai_algorithm"]= "lp_1_ai";
 	return cfg;
 }
 
-void lp_heuristic1_ai::play_turn()
+void lp_1_ai::play_turn()
 {
 	//game_events::fire("ai turn");
 
@@ -303,29 +304,30 @@ void lp_heuristic1_ai::play_turn()
 
 }
 
-std::string lp_heuristic2_ai::describe_self() const
+/*
+std::string lp_2_ai::describe_self() const
 {
-	return "[lp_heuristic2_ai]";
+	return "[lp_2_ai]";
 }
 
 
-void lp_heuristic2_ai::new_turn()
+void lp_2_ai::new_turn()
 {
 }
 
 
-config lp_heuristic2_ai::to_config() const
+config lp_2_ai::to_config() const
 {
 	config cfg;
-	cfg["ai_algorithm"]= "lp_heuristic2_ai";
+	cfg["ai_algorithm"]= "lp_2_ai";
 	return cfg;
 }
 
-void lp_heuristic2_ai::play_turn()
+void lp_2_ai::play_turn()
 {
 	//game_events::fire("ai turn");
 }
-
+*/
 
 #ifdef _MSC_VER
 #pragma warning(pop)

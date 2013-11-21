@@ -36,6 +36,7 @@ struct plain_route;
 namespace ai {
 
 /** An ai that uses LP heuristics to try to find the most efficiently aggressive move. */
+/*
 class lp_ai : public read_write_context_proxy, public interface {
 public:
         void new_turn();
@@ -43,11 +44,13 @@ public:
         void switch_side(side_number side);
         std::string describe_self() const;
 	virtual config to_config() const;
-};
+};*/
 
 /** A test to visualize the output of first LP we solve. */
-class lp_heuristic1_ai : public read_write_context_proxy, public interface {
+class lp_1_ai : public read_write_context_proxy, public interface {
 public:
+        lp_1_ai(readonly_context &context, const config &cfg);
+
         void new_turn();
         void play_turn();
         void switch_side(side_number side);
@@ -57,6 +60,7 @@ public:
 };
 
 /** A test to visualize the output of second LP we solve. */
+/*
 class lp_heuristic2_ai : public read_write_context_proxy, public interface {
 public:
         void new_turn();
@@ -65,7 +69,7 @@ public:
         std::string describe_self() const;
 
 	virtual config to_config() const;
-};
+};*/
 
 
 } //end of namespace ai
