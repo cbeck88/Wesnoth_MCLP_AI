@@ -402,6 +402,10 @@ double runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
 //     START OF LP_2_AI
 // **********************************************************************************************************
 
+lp_2_ai::lp_2_ai(readwrite_context &context, const config& /*cfg*/)
+{
+	init_readwrite_context_proxy(context);
+}
 
 std::string lp_2_ai::describe_self() const
 {
