@@ -29,7 +29,7 @@ Building
 
 I assume that you already have the ability to compile wesnoth from source.
 
-MCLP AI is intended to be installed (copied) to the base folder wesnoth-old. 
+MCLP AI is intended to be installed (copied) to the base folder wesnoth-old. You might want to "git checkout -b MCLP_AI" beforehand.
 
 The core files which are modified are /src/ai/registry.cpp, /src/SConscript, and /SConstruct.
 
