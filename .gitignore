@@ -1,3 +1,7 @@
 aitest
 aitest_old
+lp_1_ai.cfg
+lp_2_ai.cfg
 /src/ai/monte
+SetAiController
+test.txt.gz
