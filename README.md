@@ -22,11 +22,13 @@ decisions.
 Current AIs
 -----------
 
-**lp_1_ai**: This solves an LP for question (2) above, assigning all units to attack all enemies for maximum 
-expected damage. By removing a unit and a slot and recomputing, you can estmiate the opportunity cost of an attack.
+**lp_1_ai**: This solves an LP for question (2) above. It assigning all units to slots to attack all enemies
+in the way which maximizes expected damage; then it executes these moves to display the optimum solution.
+By removing a unit and a slot and recomputing the OPT, you can estimate the opportunity cost of an attack.
 
-**lp_2_ai**: This solves an LP for quesiton (1) above, estimating, for enemy unit, opt Pr to kill with a fractional LP. 
-Then it moves these units to attack.
+**lp_2_ai**: This solves an LP for question (1) above. For each enemy unit, list all possible ways its units
+can attack and from which slot, then find attack solution which maximizes ctk. We approximate ctk with a fractional LP. 
+The ai displays the optimal solution by moving these units to attack.
 
 Both of these are just tools to visualize the results of these LPs for further testing. 
 *These ais will not recruit or grab villages.* 
