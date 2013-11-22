@@ -13,23 +13,56 @@ state, hopefully very quickly. The linear programs seek to approximately determi
 2) What is the opportunity cost of attacking with a particular unit?
 
 The LP_ai heuristic is to *attack the unit which can be most easily killed using all adjacent slots, using the 
-unit from the optimal solution which is otherwise the least useful first*. After we see if we got our hits, we reevaluate.
+unit from the optimal solution which is otherwise the least useful first*. After we see if we got our hits, 
+reevaluate the same way.
 
-The MCLP_ai is not written yet, but this is the one which is planned to use the results of MC simulations to make decisions.
+The MCLP_ai is not written yet, but this is the one which is planned to use the results of MC simulations to make 
+decisions.
+
+Current AIs
+-----------
+
+**lp_1_ai**: This solves an LP for question (2) above. It assigning all units to slots to attack all enemies
+in the way which maximizes expected damage; then it executes these moves to display the optimum solution.
+By removing a unit and a slot and recomputing the OPT, you can estimate the opportunity cost of an attack.
+
+**lp_2_ai**: This solves an LP for question (1) above. For each enemy unit, list all possible ways its units
+can attack and from which slot, then find attack solution which maximizes ctk. We approximate ctk with a fractional LP. 
+The ai displays the optimal solution by moving these units to attack.
+
+Both of these are just tools to visualize the results of these LPs for further testing. 
+*These ais will not recruit or grab villages.* 
+You should load them from a savegame file which is already set up for an attack.
+
+Future AIs
+----------
+
+**lp_ai**: Will be a helper ai using the lps tested in lp_ai_1, lp_ai_2, which seeks to execute turn as aggressively 
+as possible.
+
+**mclp_ai**: Will use lp_ai in monte carlo simulations.
+
+Other
+-----
 
 I may decide to write lua hooks to the Monte Carlo procedures, so that this idea can be reused in the future more easily.
 
-LP's are solved using the lp_solve library. I installed from a linux mint package *liblpsolve55-dev*, following instructions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>.
+LP's are solved using the <a href="http://lpsolve.sourceforge.net/5.0/">lp_solve library</a> 
+(<a href="http://lpsolve.sourceforge.net/5.0/lp_solveAPIreference.htm">API</a>, <a href="http://lpsolve.sourceforge.net/5.5/formulate.htm#C/C++">example</a>). I installed from a linux mint package *liblpsolve55-dev*, following instructions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>.
 
-*If you are having trouble linking it:* For me the package automatically put a library file liblpsolve55.a in /usr/lib/, and according to scons output, g++ is told to look for libraries there, so I didn't have to do much. I don't know anything about scons though so if it doesn't work out of the box good luck :)
-You also need libcolamd2.7.1 package at least. For me this was automatically there. You need glibc (= library ld?) version 2.2.5 (if I remember the page correctly). This version is very old so almost surely whatever you have is fine.
+*If you are having trouble linking it:* For me the package automatically put a library file liblpsolve55.a in /usr/lib/, and according to scons output, g++ is told to look for libraries there, 
+so I didn't have to do much. I don't know anything about scons though so if it doesn't work out of the box good luck :)
+You also need libcolamd2.7.1 package at least. For me this was automatically there. You need glibc (= library ld?) 
+version 2.2.5 (if I remember the page correctly). This version is very old so almost surely whatever you have is fine.
 
 Building
 --------
 
 I assume that you already have the ability to compile wesnoth from source.
 
-MCLP AI is intended to be installed (copied) to the base folder wesnoth-old. You might want to "git checkout -b MCLP_AI" beforehand.
+MCLP AI is intended to be installed (copied) to the base folder wesnoth-old. 
+
+You might want to "git checkout -b MCLP_AI" beforehand.
 
 The core files which are modified are /src/ai/registry.cpp, /src/SConscript, and /SConstruct.
 
