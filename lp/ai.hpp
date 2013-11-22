@@ -61,16 +61,18 @@ public:
 };
 
 /** A test to visualize the output of second LP we solve. */
-/*
-class lp_heuristic2_ai : public read_write_context_proxy, public interface {
+
+class lp_2_ai : public readwrite_context_proxy, public interface {
 public:
+        lp_2_ai(readwrite_context &context, const config &cfg);
+
         void new_turn();
         void play_turn();
         void switch_side(side_number side);
         std::string describe_self() const;
 
 	virtual config to_config() const;
-};*/
+};
 
 
 } //end of namespace ai
