@@ -31,13 +31,13 @@ I assume that you already have the ability to compile wesnoth from source.
 
 MCLP AI is intended to be installed (copied) to /src/ai/, the only core file being modified is /ai/registry.cpp. One line is added to register my AI factories.
 
-In **/wesnoth-old/src/SConscript**: You must add 
+In _/wesnoth-old/src/SConscript_: You must add 
 
     ai/lp/ai.cpp 
     
 to the list of wesnoth sources, with the other ai.cpp files, to get scons to build it.
 
-In **/wesnoth-old/SConstruct**: You must also add three lines, at line 341:
+In _/wesnoth-old/SConstruct_: You must also add three lines, at line 341:
 
         conf.CheckLib("liblpsolve55") and \
         conf.CheckLib("colamd") and \
@@ -51,4 +51,4 @@ In **/wesnoth-old/SConstruct**: You must also add three lines, at line 341:
 to ensure that lp_solve lib and its dependencies are statically linked into wesnoth. If you are running linux you have some version of libc.
 
 I believe liblpsolve55 requires glibc version 2.2.5, which is very old. Probably whatever you have is fine. I am not going to fuss around with this in the SConstruct script,
-in part because I have ubuntu I have something called EGLIB which is a fork of glib, and it seems to work fine, so the dependency is complicated.
+because scons is something of a mystery to me.
