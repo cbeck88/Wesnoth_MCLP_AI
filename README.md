@@ -22,33 +22,66 @@ I may decide to write lua hooks to the Monte Carlo procedures, so that this idea
 LP's are solved using the lp_solve library. I installed from a linux mint package *liblpsolve55-dev*, following instructions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>.
 
 *If you are having trouble linking it:* For me the package automatically put a library file liblpsolve55.a in /usr/lib/, and according to scons output, g++ is told to look for libraries there, so I didn't have to do much. I don't know anything about scons though so if it doesn't work out of the box good luck :)
-You also need libcolamd2.7.1 package at least. For me this was automatically there.
+You also need libcolamd2.7.1 package at least. For me this was automatically there. You need glibc (= library ld?) version 2.2.5 (if I remember the page correctly). This version is very old so almost surely whatever you have is fine.
 
 Building
 --------
 
 I assume that you already have the ability to compile wesnoth from source.
 
-MCLP AI is intended to be installed (copied) to /src/ai/, the only core file being modified is /ai/registry.cpp. One line is added to register my AI factories.
+MCLP AI is intended to be installed (copied) to the base folder wesnoth-old. You might want to "git checkout -b MCLP_AI" beforehand.
 
-In _/wesnoth-old/src/SConscript_: You must add 
+The core files which are modified are /src/ai/registry.cpp, /src/SConscript, and /SConstruct.
 
-    ai/lp/ai.cpp 
-    
+In _/wesnoth-old/src/ai/registry.cpp_: Add my ai factories so that they can be used in game.
+
+    diff --git a/src/ai/registry.cpp b/src/ai/registry.cpp
+    index cc57dcf..0435fc4 100644
+    --- a/src/ai/registry.cpp
+    +++ b/src/ai/registry.cpp
+    @@ -48,7 +48,8 @@ static register_ai_factory<ai_composite> ai_factory_default("");
+     static register_ai_factory<ai_composite> ai_default_ai_factory("default_ai");
+     static register_ai_factory<idle_ai> ai_idle_ai_factory("idle_ai");
+     static register_ai_factory<ai_composite> ai_composite_ai_factory("composite_ai");
+    +static register_ai_factory<lp_1_ai> ai_lp_1_ai_factory("lp_1_ai");
+    +static register_ai_factory<lp_2_ai> ai_lp_2_ai_factory("lp_2_ai");
+     
+     // =======================================================================
+     // Engines
+
+In _/wesnoth-old/src/SConscript_: Add my source .cpp files
+
+    diff --git a/src/SConscript b/src/SConscript
+    index fbbe281..e6bc25d 100644
+    --- a/src/SConscript
+    +++ b/src/SConscript
+    @@ -197,6 +197,7 @@ wesnoth_sources = Split("""
+         ai/game_info.cpp
+         ai/gamestate_observer.cpp
+         ai/interface.cpp
+    +    ai/lp/ai.cpp
+         ai/lua/core.cpp
+         ai/lua/lua_object.cpp
+         ai/lua/unit_advancements_aspect.cpp
+         
+         
 to the list of wesnoth sources, with the other ai.cpp files, to get scons to build it.
 
-In _/wesnoth-old/SConstruct_: You must also add three lines, at line 341:
+In _/wesnoth-old/SConstruct_: Add my required libraries so that they are checked and statically linked.
 
-        conf.CheckLib("liblpsolve55") and \
-        conf.CheckLib("colamd") and \
-        conf.CheckLib("dl") and \
+    diff --git a/SConstruct b/SConstruct
+    index 5d4749c..722a158 100755
+    --- a/SConstruct
+    +++ b/SConstruct
+    @@ -338,7 +338,11 @@ if env["prereqs"]:
+             conf.CheckSDL("SDL_mixer", require_version = '1.2.0') and \
+             conf.CheckLib("vorbisfile") and \
+             conf.CheckSDL("SDL_image", require_version = '1.2.0') and \
+    +        conf.CheckLib("liblpsolve55") and \
+    +        conf.CheckLib("colamd") and \
+    +        conf.CheckLib("dl") and \
+             conf.CheckOgg() or Warning("Client prerequisites are not met. wesnoth, cutter and exploder cannot be built.")
 
-**in this order**, **in between the lines**
 
-        conf.CheckSDL("SDL_image", require_version = '1.2.0') and \
-        conf.CheckOgg() or Warning("Client prerequisites are not met. wesnoth, cutter and exploder cannot be built.")
-
-to ensure that lp_solve lib and its dependencies are statically linked into wesnoth. If you are running linux you have some version of dl already.
-
-I believe liblpsolve55 requires glibc version 2.2.5, which is very old. Probably whatever you have is fine. I am not going to fuss around with this in the SConstruct script,
-because scons is something of a mystery to me.
+I am not going to fuss around with required versions in the SConstruct script,
+because scons is something of a mystery to me. 
