@@ -23,12 +23,14 @@ Current AIs
 -----------
 
 **lp_1_ai**: This solves an LP for question (2) above. It assigning all units to slots to attack all enemies
-in the way which maximizes expected damage; then it executes these moves to display the optimum solution.
+in the way which maximizes expected damage. The ai executes these moves to display the optimum solution.
 By removing a unit and a slot and recomputing the OPT, you can estimate the opportunity cost of an attack.
+(might be a good idea to make a gold-adjusted version of this as well)
 
 **lp_2_ai**: This solves an LP for question (1) above. For each enemy unit, list all possible ways its units
 can attack and from which slot, then find attack solution which maximizes ctk. We approximate ctk with a fractional LP. 
-The ai displays the optimal solution by moving these units to attack.
+The ai solves this for every enemy unit, picks the best one and displays the optimal solution by moving 
+these units to attack.
 
 Both of these are just tools to visualize the results of these LPs for further testing. 
 *These ais will not recruit or grab villages.* 
@@ -117,4 +119,4 @@ In _/wesnoth-old/SConstruct_: Add my required libraries so that they are checked
 
 
 I am not going to fuss around with required versions in the SConstruct script,
-because scons is something of a mystery to me. 
+because scons is something of a mystery to me and I don't want to mess around with it
