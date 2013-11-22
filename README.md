@@ -33,7 +33,7 @@ MCLP AI is intended to be installed (copied) to the base folder wesnoth-old.
 
 The core files which are modified are /src/ai/registry.cpp, /src/SConscript, and /SConstruct.
 
-In _/wesnoth-old/src/ai/registry.cpp/_: Add my ai factories so that they can be used in game.
+In _/wesnoth-old/src/ai/registry.cpp_: Add my ai factories so that they can be used in game.
 
     diff --git a/src/ai/registry.cpp b/src/ai/registry.cpp
     index cc57dcf..0435fc4 100644
