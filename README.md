@@ -27,8 +27,8 @@ in the way which maximizes expected damage. The ai executes these moves to displ
 By removing a unit and a slot and recomputing the OPT, you can estimate the opportunity cost of an attack.
 (might be a good idea to make a gold-adjusted version of this as well)
 
-**lp_2_ai**: This solves an LP for question (1) above. For each enemy unit, list all possible ways its units
-can attack and from which slot, then find attack solution which maximizes ctk. We approximate ctk with a fractional LP. 
+**lp_2_ai**: This solves an LP for question (1) above. For each enemy unit, list all possible ways it can be 
+attacked and from which slot, then find attack solution which maximizes ctk. We approximate ctk with a fractional LP. 
 The ai solves this for every enemy unit, picks the best one and displays the optimal solution by moving 
 these units to attack.
 
