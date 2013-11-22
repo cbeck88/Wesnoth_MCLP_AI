@@ -19,7 +19,9 @@ The MCLP_ai is not written yet, but this is the one which is planned to use the 
 
 I may decide to write lua hooks to the Monte Carlo procedures, so that this idea can be reused in the future more easily.
 
-LP's are solved using the lp_solve library. I installed from a linux mint package *liblpsolve55-dev*, following instructions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>.
+LP's are solved using the <a href="http://lpsolve.sourceforge.net/5.0/">lp_solve library</a> (<a href="http://lpsolve.sourceforge.net/5.0/lp_solveAPIreference.htm">API</a>, <a href="http://lpsolve.sourceforge.net/5.5/formulate.htm#C/C++">example</a>). I installed from a linux mint package *liblpsolve55-dev*, following instructions <a href="http://web.mit.edu/lpsolve/doc/Build.htm#Implicit linking with the lpsolve static library ">here</a>.
+
+
 
 *If you are having trouble linking it:* For me the package automatically put a library file liblpsolve55.a in /usr/lib/, and according to scons output, g++ is told to look for libraries there, so I didn't have to do much. I don't know anything about scons though so if it doesn't work out of the box good luck :)
 You also need libcolamd2.7.1 package at least. For me this was automatically there. You need glibc (= library ld?) version 2.2.5 (if I remember the page correctly). This version is very old so almost surely whatever you have is fine.
