@@ -22,10 +22,10 @@ decisions.
 Current AIs
 -----------
 
-**lp_ai_1**: This solves an LP for question (2) above, assigning all units to attack all enemies for maximum 
+**lp_1_ai**: This solves an LP for question (2) above, assigning all units to attack all enemies for maximum 
 expected damage.
 
-**lp_ai_2**: This solves an LP for quesiton (1) above, estimating, for enemy unit, opt Pr to kill with a fractional LP. 
+**lp_2_ai**: This solves an LP for quesiton (1) above, estimating, for enemy unit, opt Pr to kill with a fractional LP. 
 Then it moves these units to attack.
 
 Both of these are just tools to visualize the results of these LPs for further testing. 
