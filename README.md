@@ -13,8 +13,8 @@ state, hopefully very quickly. The linear programs seek to approximately determi
 2) What is the opportunity cost of attacking with a particular unit?
 
 The LP_ai heuristic is to *attack the unit which can be most easily killed using all adjacent slots, using the 
-unit from the optimal solution which is otherwise the least useful first*. After we see if we got our hits, we 
-reevaluate.
+unit from the optimal solution which is otherwise the least useful first*. After we see if we got our hits, 
+reevaluate the same way.
 
 The MCLP_ai is not written yet, but this is the one which is planned to use the results of MC simulations to make 
 decisions.
@@ -29,7 +29,8 @@ expected damage.
 Then it moves these units to attack.
 
 Both of these are just tools to visualize the results of these LPs for further testing. 
-The ais will not recruit or grab villages.
+*These ais will not recruit or grab villages.* 
+You should load them from a savegame file which is already set up for an attack.
 
 Future AIs
 ----------
