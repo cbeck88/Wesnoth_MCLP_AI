@@ -23,7 +23,7 @@ Current AIs
 -----------
 
 **lp_1_ai**: This solves an LP for question (2) above, assigning all units to attack all enemies for maximum 
-expected damage.
+expected damage. By removing a unit and a slot and recomputing, you can estmiate the opportunity cost of an attack.
 
 **lp_2_ai**: This solves an LP for quesiton (1) above, estimating, for enemy unit, opt Pr to kill with a fractional LP. 
 Then it moves these units to attack.
