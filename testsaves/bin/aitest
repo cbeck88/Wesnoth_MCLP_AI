@@ -1,20 +1,22 @@
 #!/bin/bash
 if [ $# -eq 0 ]; then
-    echo -e "\nUsage: \n $0 scen_code [ai1_type] [ai2_type] [extra]\n"
-    echo -e "\tscen_code: scen_code.gz is a file in /testsaves/human1.11/, ready to have ai injected."
-    echo -e "\tai_type: Indicates which ai to inject\n\t\t1 = lp_1_ai\n\t\t2 = lp_2_ai\n\n\t\t0 = idle_ai\n\t\t-1= human (no change)\n"
-    echo -e "\n\tUp to 4 arguments extra to wesnoth.\n"
+    echo -e "\tLoads MCLP ais into .gz save files and launches wesnoth."
+    echo -e "\n\tUsage: \n\t\t./aitest scen_code [ai1_type] [ai2_type] [extra]\n"
+    echo -e "\tscen_code: scen_code.gz is a 1.11 savefile in /testsaves/human1.11/, ready to have ai injected."
+    echo -e "\tai_type: Indicates which ai to inject\n\n\t\t-1 = human (no change)\n\t\t 0 = idle_ai\n\t\t 1 = lp_1_ai\n\t\t 2 = lp_2_ai\n"
     echo -e "\tPrimary side for this scen is determined /testsaves/conf/scen_code.aiplayer conf file, otherwise is 1.\n"
+    echo -e "\tLaunches wesnoth with options --data-dir, --load, --log-debug=ai/mod, plus [extra]'s.\n"
     exit;
 fi
 
 SOURCE_FILE=../human1.11/$1.gz
 if [ ! -f $SOURCE_FILE ]; then
-    echo -e "\nUsage: \n $0 scen_code [ai1_type] [ai2_type] [extra]\n"
-    echo -e "\tscen_code: scen_code.gz is a file in /testsaves/human1.11/, ready to have ai injected."
-    echo -e "\tai_type: Indicates which ai to inject\n\t\t1 = lp_1_ai\n\t\t2 = lp_2_ai\n\n\t\t0 = idle_ai\n\t\t-1= human (no change)\n"
-    echo -e "\n\tUp to 4 arguments extra to wesnoth.\n"
+    echo -e "\tLoads MCLP ais into .gz save files and launches wesnoth."
+    echo -e "\n\tUsage: \n\t\t./aitest scen_code [ai1_type] [ai2_type] [extra]\n"
+    echo -e "\tscen_code: scen_code.gz is a 1.11 savefile in /testsaves/human1.11/, ready to have ai injected."
+    echo -e "\tai_type: Indicates which ai to inject\n\n\t\t-1 = human (no change)\n\t\t 0 = idle_ai\n\t\t 1 = lp_1_ai\n\t\t 2 = lp_2_ai\n"
     echo -e "\tPrimary side for this scen is determined /testsaves/conf/scen_code.aiplayer conf file, otherwise is 1.\n"
+    echo -e "\tLaunches wesnoth with options --data-dir, --load, --log-debug=ai/mod, plus [extra]'s.\n"
     exit;
 fi
 
@@ -53,40 +55,18 @@ if [ $# -ge 2 ]; then
       cp $SOURCE_FILE ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
    fi
 
-if [ $# -ge 3 ]; then
-   OLDFINAL=$FINAL
-   FINAL=$FINAL.ai$3
-   if [ $3 != -1 ]; then
-      ./SetAiController $AI2 ../ai-cfg/lp_$3_a3.cfg ~/.local/share/wesnoth/1.11/saves/$OLDFINAL.gz ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
-   else
-      cp ~/.local/share/wesnoth/1.11/saves/$OLDFINAL.gz ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
+   if [ $# -ge 3 ]; then
+      OLDFINAL=$FINAL
+      FINAL=$FINAL.ai$3
+      if [ $3 != -1 ]; then
+         ./SetAiController $AI2 ../ai-cfg/lp_$3_a3.cfg ~/.local/share/wesnoth/1.11/saves/$OLDFINAL.gz ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
+      else
+         cp ~/.local/share/wesnoth/1.11/saves/$OLDFINAL.gz ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
+      fi
    fi
-
-
-if [ $# -ge 4 ]; then
-   EXTRA=$EXTRA $4
-
-if [ $# -ge 5 ]; then
-   EXTRA=$EXTRA $5
-
-if [ $# -ge 6 ]; then
-   EXTRA=$EXTRA $6
-
-if [ $# -ge 7 ]; then
-   EXTRA=$EXTRA $7
-
-if [ $# -ge 8 ]; then
-   echo -e "aitest: too many extra args :/ sorry\n\n"
-
-fi
-fi
-fi
-fi
-fi
-fi
 fi
 
-OPTIONS="--data-dir ../../../wesnoth-old/ --load $FINAL.gz --log-debug=ai/mod $EXTRA"
+OPTIONS="--data-dir ../../../wesnoth-old/ --load $FINAL.gz --log-debug=ai/mod ${@:4}"
 echo "OPTIONS: "
 echo $OPTIONS
 ./../../../wesnoth-old/wesnoth $OPTIONS

@@ -1,0 +1,17 @@
+See aitest usage for details.
+
+/original1.10/         Original 1.10 replay files.
+/human1.11/            Replays converted to 1.11 and saved at critical point.
+/conf/                 Conf file which holds "1" if P1 is primary player (next turn), "2" otherwise.
+/ai-cfg/               ai tags ready to be injected into WML save files.
+
+Every scen_code should be a string, e.g. G1, corresponding to 
+
+- .gz replay in /human1.11/     (mandatory)
+- .aiplayer text in /conf/      (optional)
+- .gz replay in /original1.10/  (optional)
+
+scen_code.aiplayer should contain "1" or "2" depending on who moves next in replay (primary player).
+
+Every ai_type corresponds to a WML block in /ai-cfg/.
+
