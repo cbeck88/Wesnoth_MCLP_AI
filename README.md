@@ -150,7 +150,7 @@ In _/wesnoth-old/SConstruct_: Add my required libraries so that they are checked
 I am not going to fuss with required versions in the SConstruct script,
 because scons is something of a mystery to me and I don't want to mess around with it.
 
-In _/src/ai/comosite/ai.hpp_
+In _/src/ai/composite/ai.hpp_
 
     diff --git a/src/ai/composite/ai.hpp b/src/ai/composite/ai.hpp
     index 7d0685c..9ef61d1 100644
