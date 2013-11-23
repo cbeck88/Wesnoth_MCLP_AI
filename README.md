@@ -48,7 +48,7 @@ Other
 -----
 
 There are some test saves and utilities in /testsaves. Use the script aitest to inject an ai into one of the savegames
-found there, and load it into wesnoth-1.11.
+found there, and load it into wesnoth-1.11. Or add your own replays/ais for testing.
 
 I may decide to write lua hooks to the Monte Carlo procedures, so that this idea can be reused in the future more easily.
 
