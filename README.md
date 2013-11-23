@@ -126,5 +126,5 @@ In _/wesnoth-old/SConstruct_: Add my required libraries so that they are checked
              conf.CheckOgg() or Warning("Client prerequisites are not met. wesnoth, cutter and exploder cannot be built.")
 
 
-I am not going to fuss around with required versions in the SConstruct script,
+I am not going to fuss with required versions in the SConstruct script,
 because scons is something of a mystery to me and I don't want to mess around with it
