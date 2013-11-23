@@ -1,17 +1,20 @@
 #!/bin/bash
 if [ $# -eq 0 ]; then
-    echo "Usage: \n $0 scen_code [ai1_type] [ai2_type] [extra]\n\nAi 1 is determined by .aiplayer conf file, otherwise is 1."
-    echo "ai type: \n\t1 = lp_1_ai\n\t2 = lp_2_ai\n\n\t0=idle_ai\n\t-1=human (no change)\n"
-    echo "\nUp to 4 arguments extra to wesnoth.\n"
+    echo -e "\nUsage: \n $0 scen_code [ai1_type] [ai2_type] [extra]\n"
+    echo -e "\tscen_code: scen_code.gz is a file in /testsaves/human1.11/, ready to have ai injected."
+    echo -e "\tai_type: Indicates which ai to inject\n\t\t1 = lp_1_ai\n\t\t2 = lp_2_ai\n\n\t\t0 = idle_ai\n\t\t-1= human (no change)\n"
+    echo -e "\n\tUp to 4 arguments extra to wesnoth.\n"
+    echo -e "\tPrimary side for this scen is determined /testsaves/conf/scen_code.aiplayer conf file, otherwise is 1.\n"
     exit;
 fi
 
 SOURCE_FILE=../human1.11/$1.gz
 if [ ! -f $SOURCE_FILE ]; then
-    echo "aitest: Could not find source file for this code.\n\n"
-    echo "Usage: \n $0 scen_code [ai1_type] [ai2_type] [extra]\n\nAi 1 is determined by .aiplayer conf file, otherwise is 1."
-    echo "ai type: \n\t1 = lp_1_ai\n\t2 = lp_2_ai\n\n\t0=idle_ai\n\t-1=human (no change)\n"
-    echo "\nUp to 4 arguments extra to wesnoth.\n"
+    echo -e "\nUsage: \n $0 scen_code [ai1_type] [ai2_type] [extra]\n"
+    echo -e "\tscen_code: scen_code.gz is a file in /testsaves/human1.11/, ready to have ai injected."
+    echo -e "\tai_type: Indicates which ai to inject\n\t\t1 = lp_1_ai\n\t\t2 = lp_2_ai\n\n\t\t0 = idle_ai\n\t\t-1= human (no change)\n"
+    echo -e "\n\tUp to 4 arguments extra to wesnoth.\n"
+    echo -e "\tPrimary side for this scen is determined /testsaves/conf/scen_code.aiplayer conf file, otherwise is 1.\n"
     exit;
 fi
 
@@ -20,16 +23,16 @@ CONF_FILE=../conf/$1.aiplayer
 if [ -f $CONF_FILE ]; then
     AI_PLAYER=`cat $CONF_FILE`
 else
-    echo "aitest: no config for $1\n"
+    echo -e "aitest: no config for $1\n"
     AI_PLAYER=1
 fi
 
 if [ $AI_PLAYER = 1 ]; then 
-    echo "aitest: ai1 is primary\n"
+    echo -e "aitest: ai1 is primary\n"
     AI1=1
     AI2=2
 else
-    echo "aitest: ai2 is primary\n"
+    echo -e "aitest: ai2 is primary\n"
     AI1=2
     AI2=1
 fi
@@ -73,7 +76,7 @@ if [ $# -ge 7 ]; then
    EXTRA=$EXTRA $7
 
 if [ $# -ge 8 ]; then
-   echo "aitest: too many extra args :/ sorry\n\n"
+   echo -e "aitest: too many extra args :/ sorry\n\n"
 
 fi
 fi
