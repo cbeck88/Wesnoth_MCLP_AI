@@ -342,7 +342,6 @@ if env["prereqs"]:
         conf.CheckLib("colamd") and \
         conf.CheckLib("dl") and \
         conf.CheckOgg() or Warning("Client prerequisites are not met. wesnoth, cutter and exploder cannot be built.")
-    
 
     have_X = False
     if have_client_prereqs:

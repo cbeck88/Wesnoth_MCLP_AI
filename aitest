@@ -1,2 +1,2 @@
 #!/bin/bash
-./testsaves/bin/aitest "${@:1}"
+./testsaves/bin/aitest ${@:1}
