@@ -71,17 +71,18 @@ Building
 I assume that you already have the ability to compile wesnoth from source. If not you can visit our fine friends over 
 <a href="https://github.com/wesnoth/wesnoth-old">here</a>.
 
-MCLP AI is essentially a branch of wesnoth-old. I just give it its own github repository like this to keep it manageable.
+MCLP AI is essentially a branch of wesnoth-old. I just give it its own github repository like this to keep it at a 
+manageable size.
 
 To build MCLP AI, 
 
-1) Make a folder to hold both projects, e.g. wesnoth-src. Clone wesnoth-old and MCLP_AI into this folder.
+1) Make a folder to hold both projects, e.g. wesnoth-src. Clone wesnoth-old and Wesnoth\_MCLP\_AI into this folder.
 
 2) Now the contents of MCLP AI are intended to be installed (copied) to the base folder wesnoth-old. 
 
 You might want to "git checkout -b MCLP_AI" in wesnoth-old beforehand.
 
-3) Then just run scons in wesnoth-src as usual.
+3) Then just run scons in /wesnoth-old/ as usual.
 
 The core files which are modified are /src/ai/registry.cpp, /src/SConscript, and /SConstruct.
 
