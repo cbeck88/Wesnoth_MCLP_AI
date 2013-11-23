@@ -80,7 +80,7 @@ To build MCLP AI,
 
    (If MCLP_AI base folder is not a sibling of wesnoth-old, the only bad thing is that the testsaves suite won't work.)
 
-2. Now the contents of MCLP AI are intended to be installed (copied) to the base folder wesnoth-old. 
+2. Now the contents (SConstruct, /data/, /src/) of MCLP AI are intended to be installed (copied) to the base folder wesnoth-old.
 
    You might want to "git checkout -b MCLP_AI" in wesnoth-old beforehand.
 
@@ -149,3 +149,71 @@ In _/wesnoth-old/SConstruct_: Add my required libraries so that they are checked
 
 I am not going to fuss with required versions in the SConstruct script,
 because scons is something of a mystery to me and I don't want to mess around with it.
+
+In _/src/ai/comosite/ai.hpp_
+
+    diff --git a/src/ai/composite/ai.hpp b/src/ai/composite/ai.hpp
+    index 7d0685c..9ef61d1 100644
+    --- a/src/ai/composite/ai.hpp
+    +++ b/src/ai/composite/ai.hpp
+    @@ -52,7 +52,7 @@ public:
+            /**
+             * Play the turn
+             */
+    -       void play_turn();
+    +       virtual void play_turn();
+     
+     
+            /**
+    @@ -66,7 +66,7 @@ public:
+            virtual void new_turn();
+     
+     
+    -       std::string describe_self() const;
+    +       virtual std::string describe_self() const;
+     
+            /**
+             * serialize
+    @@ -95,7 +95,7 @@ public:
+            void create_engine(std::vector<engine_ptr> &engines, const config &cfg);
+     
+     
+    -       void on_create();
+    +       virtual void on_create();
+     
+            /**
+             * unwrap
+
+In _/src/ai/manager.cpp_
+
+    diff --git a/src/ai/manager.cpp b/src/ai/manager.cpp
+    index dea1dc9..6c36445 100644
+    --- a/src/ai/manager.cpp
+    +++ b/src/ai/manager.cpp
+    @@ -18,6 +18,7 @@
+      */
+     
+     #include "composite/ai.hpp"
+    +#include "lp/ai.hpp"
+     #include "configuration.hpp"
+     #include "contexts.hpp"
+     #include "default/ai.hpp"
+    @@ -81,7 +82,16 @@ void holder::init( side_number side )
+                    default_ai_context_ = new default_ai_context_impl(*readwrite_context_,cfg_);
+            }
+            if (!this->ai_){
+    -               ai_ = boost::shared_ptr<ai_composite>(new ai_composite(*default_ai_context_,cfg_));
+    +                //this case analysis added by iceiceice nov 23 2013, as the quickest hack that would work
+    +                if (cfg_["ai_algorithm"] == "lp_1_ai") {
+    +                    ai_ = boost::shared_ptr<ai_composite>(new lp_1_ai(*default_ai_context_, cfg_));
+    +                }
+    +                else if (cfg_["ai_algorithm"] == "lp_2_ai") {
+    +                    ai_ = boost::shared_ptr<ai_composite>(new lp_2_ai(*default_ai_context_, cfg_));
+    +                }
+    +               else {
+    +                    ai_ = boost::shared_ptr<ai_composite>(new ai_composite(*default_ai_context_,cfg_));
+    +                }
+            }
+     
+            if (this->ai_) {
+   
