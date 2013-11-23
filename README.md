@@ -8,9 +8,9 @@ During these monte carlo simulations, all parties will be controlled by an effic
 to kill as much gold as possible in its turn. To do this, it solves a series of linear programs related to the game
 state, hopefully very quickly. The linear programs seek to approximately determine
 
-1) What is the enemy unit that is easiest for me to kill?
+1. What is the enemy unit that is easiest for me to kill?
 
-2) What is the opportunity cost of attacking with a particular unit?
+2. What is the opportunity cost of attacking with a particular unit?
 
 The LP_ai heuristic is to *attack the unit which can be most easily killed using all adjacent slots, using the 
 unit from the optimal solution which is otherwise the least useful first*. After we see if we got our hits, 
@@ -76,15 +76,15 @@ manageable size.
 
 To build MCLP AI, 
 
-1) Make a folder to hold both projects, e.g. wesnoth-src. Clone wesnoth-old and Wesnoth\_MCLP\_AI into this folder.
+1. Make a folder to hold both projects, e.g. wesnoth-src. Clone wesnoth-old and Wesnoth\_MCLP\_AI into this folder.
 
    (If MCLP_AI base folder is not a sibling of wesnoth-old, the only bad thing is that the testsaves suite won't work.)
 
-2) Now the contents of MCLP AI are intended to be installed (copied) to the base folder wesnoth-old. 
+2. Now the contents of MCLP AI are intended to be installed (copied) to the base folder wesnoth-old. 
 
    You might want to "git checkout -b MCLP_AI" in wesnoth-old beforehand.
 
-3) Then just run scons in /wesnoth-old/ as usual.
+3. Then just run scons in /wesnoth-old/ as usual.
 
 
 
