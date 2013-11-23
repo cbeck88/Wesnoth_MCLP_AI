@@ -66,7 +66,7 @@ if [ $# -ge 2 ]; then
    fi
 fi
 
-OPTIONS="--data-dir ../../../wesnoth-old/ --load $FINAL.gz --log-debug=ai/mod ${@:4}"
+OPTIONS="--data-dir ../../../wesnoth-old/ --load $FINAL.gz --log-debug=ai/mod --log-debug=ai/general --log-debug=ai/config --log-debug=ai/manager ${@:4}"
 echo "OPTIONS: "
 echo $OPTIONS
 ./../../../wesnoth-old/wesnoth $OPTIONS
