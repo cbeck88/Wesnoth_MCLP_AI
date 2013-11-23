@@ -66,7 +66,7 @@ public:
 	virtual void new_turn();
 
 
-	std::string describe_self() const;
+	virtual std::string describe_self() const;
 
 	/**
 	 * serialize
@@ -95,7 +95,7 @@ public:
 	void create_engine(std::vector<engine_ptr> &engines, const config &cfg);
 
 
-	void on_create();
+	virtual void on_create();
 
 	/**
 	 * unwrap

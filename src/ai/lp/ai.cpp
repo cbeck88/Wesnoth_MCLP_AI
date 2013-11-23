@@ -139,6 +139,10 @@ std::string lp_1_ai::describe_self() const
 	return "[lp_1_ai]";
 }
 
+void lp_1_ai::on_create()
+{
+        LOG_AI << "creating an lp_1_ai" << std::endl;
+}
 
 void lp_1_ai::new_turn()
 {
@@ -416,6 +420,10 @@ std::string lp_2_ai::describe_self() const
 	return "[lp_2_ai]";
 }
 
+void lp_2_ai::on_create()
+{
+        LOG_AI << "creating an lp_2_ai" << std::endl;
+}
 
 void lp_2_ai::new_turn()
 {

@@ -1,0 +1,59 @@
+#!/bin/sh
+ARGS=4
+if [ $# -ne "$ARGS" ]; then
+   echo "Usage: $0 side_num ai_cfg infile outfile";
+   exit;
+fi
+#mydir=$(mktemp -dt "setcontroller.XXXXXX")
+mydir=tempdir
+rm -r $mydir
+mkdir $mydir
+echo "#!/bin/sed -f
+/\[snapshot\]/,/\[\/snapshot\]/ {
+    /\[side\]/,/\[[[:lower:]_/]*\]/ {
+        /side=$1/ b search_open_ai
+    }
+}
+b
+:search_open_ai
+/\[ai\]/ b search_close_ai
+n
+b search_open_ai
+:search_close_ai
+s/.*//
+n
+/\[\/ai\]/ b add_new_ai
+b search_close_ai
+:add_new_ai
+s/.*//
+r $2" > $mydir/sedscript1
+chmod +x $mydir/sedscript1
+#echo "#!/bin/sed -f
+#/\[snapshot\]/,/\[\/snapshot\]/ {
+#    /\[side\]/ b inside
+#}
+#b
+#:inside
+#N
+#/\[\/side\]/ b checknum
+#b inside
+#:checknum
+#/\[side\].*side=$1.*\[\/side\]/ {
+#    s/\(.*\)controller=\(.*\)\\n\(.*\)/\\1controller=\\\"ai\\\"\\n\\3/
+#}" > $mydir/sedscript2
+./get_controller_change_script $1 > $mydir/sedscript2
+chmod +x $mydir/sedscript2
+echo "#!/bin/sed -f
+/\[side\]/,/\[\/side\]/ {
+    /^$/d
+}" > $mydir/sedscript3
+chmod +x $mydir/sedscript3
+echo "working"
+gzip -d -c $3 | $mydir/sedscript1 | $mydir/sedscript2 | $mydir/sedscript3 > $mydir/uncompressed
+echo "finishing"
+gzip -c $mydir/uncompressed > $4
+echo "done"
+#rm -r $mydir
+#chmod +x sedscript
+#gzip -d -c $3 | ./sedscript | sed 's/^ *//; s/ *$//; /^$/d' > uncompressed.temp
+#gzip -c uncompressed.temp > $4

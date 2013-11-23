@@ -1,0 +1,19 @@
+#!/bin/sed -f
+/\[snapshot\]/,/\[\/snapshot\]/ {
+    /\[side\]/,/\[[[:lower:]_/]*\]/ {
+        /side=1/ b search_open_ai
+    }
+}
+b
+:search_open_ai
+/\[ai\]/ b search_close_ai
+n
+b search_open_ai
+:search_close_ai
+s/.*//
+n
+/\[\/ai\]/ b add_new_ai
+b search_close_ai
+:add_new_ai
+s/.*//
+r lp_0_ai.cfg

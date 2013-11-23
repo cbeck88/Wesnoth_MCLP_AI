@@ -1,0 +1,6 @@
+#!/bin/bash
+if [ -z "$0" ]; then
+   echo "Usage: test_num ai_num extra_args";
+fi
+echo "Options: -m --data-dir ~/wesnoth-src/wesnoth-old/ -l --load T$1.gz --controller 1:ai --controller 2:ai --algorithm 1:lp_$2_ai --algorithm 2:idle_ai --log-debug=ai/mod $3"
+./../wesnoth-old/wesnoth -m --data-dir ~/wesnoth-src/wesnoth-old/ --load T$1.gz --controller 1:ai --controller 2:ai --algorithm 1:lp_$2_ai --algorithm 2:idle_ai --log-debug=ai/mod $3

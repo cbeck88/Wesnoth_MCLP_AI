@@ -1,0 +1,3 @@
+#!/bin/bash
+gzip -d -c ~/.local/share/wesnoth/1.11/saves/G1.gz | tempdir/sedscript1 | tempdir/sedscript2 
+

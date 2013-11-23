@@ -1,0 +1,13 @@
+#!/bin/sed -f
+/\[snapshot\]/,/\[\/snapshot\]/ {
+    /\[side\]/ b inside
+    b
+}
+:inside
+N
+/\[side\].*\[\/side\]/ b checknum
+b inside
+:checknum
+/\[side\].*side=.*\[\/side\]/ {
+    s/\(.*\)controller=\(.*\)\n\(.*\)/\1controller=\"ai\"\n\2/
+}
