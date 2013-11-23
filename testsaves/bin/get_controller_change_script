@@ -1,0 +1,14 @@
+#!/bin/bash
+echo "#!/bin/sed -f
+/\[snapshot\]/,/\[\/snapshot\]/ {
+    /\[side\]/ b inside
+}
+b
+:inside
+N
+/\[\/side\]/ b checknum
+b inside
+:checknum
+/\[side\].*side=$1.*\[\/side\]/ {
+    s/controller=\"[^\"]*\"/controller=\"ai\"/
+}" 
