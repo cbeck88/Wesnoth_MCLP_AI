@@ -91,7 +91,7 @@ To build MCLP AI,
 The ~~only~~ core files which are modified are /src/ai/registry.cpp, /src/SConscript, and /SConstruct.
 
 Because of <a href="http://forums.wesnoth.org/viewtopic.php?f=10&t=39660&p=563094#p563094">what I consider to be bugs in AI module</a>, 
-it is not possible to add a custom C++ ai without altering several additional core AI module files:
+it is not possible in the current version to add a custom C++ ai without altering several additional core AI module files:
 
 /src/ai/manager.cpp, /src/ai/composite/ai.hpp
 
