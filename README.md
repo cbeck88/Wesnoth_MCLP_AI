@@ -77,13 +77,16 @@ manageable size.
 To build MCLP AI, 
 
 1) Make a folder to hold both projects, e.g. wesnoth-src. Clone wesnoth-old and Wesnoth\_MCLP\_AI into this folder.
-(If MCLP_AI base folder is not a sibling of wesnoth-old, the only bad thing is that the testsaves suite won't work.)
+
+   (If MCLP_AI base folder is not a sibling of wesnoth-old, the only bad thing is that the testsaves suite won't work.)
 
 2) Now the contents of MCLP AI are intended to be installed (copied) to the base folder wesnoth-old. 
 
-You might want to "git checkout -b MCLP_AI" in wesnoth-old beforehand.
+   You might want to "git checkout -b MCLP_AI" in wesnoth-old beforehand.
 
 3) Then just run scons in /wesnoth-old/ as usual.
+
+
 
 The core files which are modified are /src/ai/registry.cpp, /src/SConscript, and /SConstruct.
 
