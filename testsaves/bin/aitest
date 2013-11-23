@@ -1,0 +1,89 @@
+#!/bin/bash
+if [ $# -eq 0 ]; then
+    echo "Usage: \n $0 scen_code [ai1_type] [ai2_type] [extra]\n\nAi 1 is determined by .aiplayer conf file, otherwise is 1."
+    echo "ai type: \n\t1 = lp_1_ai\n\t2 = lp_2_ai\n\n\t0=idle_ai\n\t-1=human (no change)\n"
+    echo "\nUp to 4 arguments extra to wesnoth.\n"
+    exit;
+fi
+
+SOURCE_FILE=../human1.11/$1.gz
+if [ ! -f $SOURCE_FILE ]; then
+    echo "aitest: Could not find source file for this code.\n\n"
+    echo "Usage: \n $0 scen_code [ai1_type] [ai2_type] [extra]\n\nAi 1 is determined by .aiplayer conf file, otherwise is 1."
+    echo "ai type: \n\t1 = lp_1_ai\n\t2 = lp_2_ai\n\n\t0=idle_ai\n\t-1=human (no change)\n"
+    echo "\nUp to 4 arguments extra to wesnoth.\n"
+    exit;
+fi
+
+CONF_FILE=../conf/$1.aiplayer
+
+if [ -f $CONF_FILE ]; then
+    AI_PLAYER=`cat $CONF_FILE`
+else
+    echo "aitest: no config for $1\n"
+    AI_PLAYER=1
+fi
+
+if [ $AI_PLAYER = 1 ]; then 
+    echo "aitest: ai1 is primary\n"
+    AI1=1
+    AI2=2
+else
+    echo "aitest: ai2 is primary\n"
+    AI1=2
+    AI2=1
+fi
+
+FINAL=$1
+EXTRA=""
+
+if [ ! -f ~/.local/share/wesnoth/1.11/saves/$FINAL.gz ]; then 
+   cp $SOURCE_FILE ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
+fi
+
+
+if [ $# -ge 2 ]; then
+   FINAL=$FINAL.ai$2
+   if [ $2 != -1 ]; then
+      ./SetAiController $AI1 ../ai-cfg/lp_$2_ai.cfg $SOURCE_FILE ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
+   else
+      cp $SOURCE_FILE ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
+   fi
+
+if [ $# -ge 3 ]; then
+   OLDFINAL=$FINAL
+   FINAL=$FINAL.ai$3
+   if [ $3 != -1 ]; then
+      ./SetAiController $AI2 ../ai-cfg/lp_$3_a3.cfg ~/.local/share/wesnoth/1.11/saves/$OLDFINAL.gz ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
+   else
+      cp ~/.local/share/wesnoth/1.11/saves/$OLDFINAL.gz ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
+   fi
+
+
+if [ $# -ge 4 ]; then
+   EXTRA=$EXTRA $4
+
+if [ $# -ge 5 ]; then
+   EXTRA=$EXTRA $5
+
+if [ $# -ge 6 ]; then
+   EXTRA=$EXTRA $6
+
+if [ $# -ge 7 ]; then
+   EXTRA=$EXTRA $7
+
+if [ $# -ge 8 ]; then
+   echo "aitest: too many extra args :/ sorry\n\n"
+
+fi
+fi
+fi
+fi
+fi
+fi
+fi
+
+OPTIONS="--data-dir ../../../wesnoth-old/ --load $FINAL.gz --log-debug=ai/mod $EXTRA"
+echo "OPTIONS: "
+echo $OPTIONS
+./../../../wesnoth-old/wesnoth $OPTIONS
