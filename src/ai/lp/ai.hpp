@@ -62,6 +62,7 @@ public:
         void switch_side(side_number side);
         std::string describe_self() const;
         //void add stage? iirc ai_composite.play_turn is where the stages are executed so we can just ignore stages now.
+        void on_create();
 
 	virtual config to_config() const;
 };
@@ -79,6 +80,7 @@ public:
         void play_turn();
         void switch_side(side_number side);
         std::string describe_self() const;
+        void on_create();
 
 	virtual config to_config() const;
 };
