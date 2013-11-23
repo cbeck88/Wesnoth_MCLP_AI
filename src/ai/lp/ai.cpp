@@ -128,10 +128,10 @@ void lp_ai::play_turn()
 */
 // ======== Test ai's to visiualize LP output ===========
 
-lp_1_ai::lp_1_ai(readwrite_context &context, const config& /*cfg*/)
-{
-	init_readwrite_context_proxy(context);
-}
+//lp_1_ai::lp_1_ai(default_ai_context &context, const config& /*cfg*/)
+//{
+//        LOG_AI << "lp_1_constructed" << std::endl;
+//}
 
 
 std::string lp_1_ai::describe_self() const
@@ -142,6 +142,7 @@ std::string lp_1_ai::describe_self() const
 
 void lp_1_ai::new_turn()
 {
+        LOG_AI << "lp_1_ai new turn" << std::endl;
 }
 
 void lp_1_ai::switch_side(side_number side)
@@ -157,6 +158,8 @@ config lp_1_ai::to_config() const
 
 void lp_1_ai::play_turn()
 {
+        LOG_AI << "lp_1_ai play_turn()" << std::endl;
+
 	//game_events::fire("ai turn");
         clock_t c0 = clock();
 
@@ -402,10 +405,11 @@ double runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
 //     START OF LP_2_AI
 // **********************************************************************************************************
 
-lp_2_ai::lp_2_ai(readwrite_context &context, const config& /*cfg*/)
-{
-	init_readwrite_context_proxy(context);
-}
+//lp_2_ai::lp_2_ai(default_ai_context &context, const config& /*cfg*/) : ai_composite(context, config)
+//{
+//        LOG_AI << "lp_2_constructed" << std::endl;
+//	init_default_ai_context_proxy(context);
+//}
 
 std::string lp_2_ai::describe_self() const
 {
@@ -415,6 +419,7 @@ std::string lp_2_ai::describe_self() const
 
 void lp_2_ai::new_turn()
 {
+        LOG_AI << "lp_2_ai new turn" << std::endl;
 }
 
 void lp_2_ai::switch_side(side_number side)
@@ -430,6 +435,7 @@ config lp_2_ai::to_config() const
 
 void lp_2_ai::play_turn()
 {
+        LOG_AI << "lp_2_ai play_turn()" << std::endl;
 	//game_events::fire("ai turn");
         typedef move_map::const_iterator Itor;
         typedef std::multimap<map_location,int>::iterator locItor;

@@ -19,6 +19,7 @@
 
 #include "../contexts.hpp"
 #include "../interface.hpp"
+#include "../composite/ai.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -48,9 +49,13 @@ public:
 };*/
 
 /** A test to visualize the output of first LP we solve. */
-class lp_1_ai : public readwrite_context_proxy, public interface {
+//class lp_1_ai : public readwrite_context_proxy, public interface {
+class lp_1_ai : public ai_composite {
 public:
-        lp_1_ai(readwrite_context &context, const config &cfg);
+//        lp_1_ai(readwrite_context &context, const config &cfg);
+//        lp_1_ai(default_ai_context &context, const config &cfg);
+        lp_1_ai(default_ai_context &context, const config& cfg):ai_composite(context, cfg) { }
+//        lp_1_ai(const lp_1_ai &ai);
 
         void new_turn();
         void play_turn();
@@ -61,10 +66,13 @@ public:
 };
 
 /** A test to visualize the output of second LP we solve. */
-
-class lp_2_ai : public readwrite_context_proxy, public interface {
+//class lp_2_ai : public readwrite_context_proxy, public interface {
+class lp_2_ai : public ai_composite {
 public:
-        lp_2_ai(readwrite_context &context, const config &cfg);
+//        lp_2_ai(readwrite_context &context, const config &cfg);
+//        lp_2_ai(default_ai_context &context, const config &cfg);
+        lp_2_ai(default_ai_context &context, const config& cfg):ai_composite(context, cfg) { }
+//        lp_2_ai(const lp_2_ai &ai);
 
         void new_turn();
         void play_turn();
