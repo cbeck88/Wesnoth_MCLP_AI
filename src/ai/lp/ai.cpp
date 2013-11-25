@@ -149,28 +149,24 @@ void lp_1_ai::play_turn()
         calculate_possible_moves(possible_moves,srcdst,dstsrc,false);
 
 	unit_map& units_ = *resources::units;
-        //gamemap& map_ = *resources::game_map;
 
         // for reference, LP_solve template file is here: http://lpsolve.sourceforge.net/5.5/formulate.htm
         lprec *lp;
         int Ncol = 0;
         int *col = NULL, j, ret;
-        //unsigned char ret;
         REAL *row = NULL;
 
         //Each attacker destination "slot" becomes a row in LP since these are exclusive.
         std::multimap<map_location, int> *slotMap = new std::multimap<map_location,int>();
-        //Each unit can only attack once so this becomes a row in LP as well. Key will be unit.underlying_id();
+        //Each unit can only attack once so this becomes a row in LP as well.
         std::multimap<map_location, int> *unitMap = new std::multimap<map_location, int>();
 
         typedef std::multimap<map_location,int>::iterator locItor;
-//        typedef std::multimap<size_t,int>::iterator unitItor;
 
         std::pair<Itor,Itor> range;
 
         map_location adjacent_tiles[6];
 
-        //i sis a unit iterator old info: i->first will be loc, and i->second will be unit, which is enemy
         for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
             if(current_team().is_enemy(i->side()) && !i->incapacitated()) {        
                  get_adjacent_tiles(i->get_location(),adjacent_tiles);
@@ -180,25 +176,16 @@ void lp_1_ai::play_turn()
                      while(range.first != range.second) {
                          //columns numbered from 1 in lib lp_solve
                          slotMap->insert(std::make_pair<map_location,int> (range.first->first,++Ncol));
-                         unitMap->insert(std::make_pair<map_location,int> (range.first->second, Ncol));
- 
-  //                       const unit_map::const_iterator un = units_.find(range.first->second);
-  //                       assert(un != units_.end());
-
-  //                       unitMap->insert(std::make_pair<size_t,int> (un->underlying_id(), Ncol));
-
-                         DBG_AI << "LP_AI Column: " << Ncol << " = " << range.first->second << " -> " << range.first->first << " attack " << i->get_location() << std::endl;
-
+                         unitMap->insert(std::make_pair<map_location,int> (range.first->second, Ncol)); 
+                         DBG_AI << "LP_AI Column:" << Ncol << ":" << range.first->second << " -> " << range.first->first << " \\> " << i->get_location() << std::endl;
                          ++range.first;
                      }
                  }
             }
         }
-
         //Now we have the constraint matrix for our LP. Start with 0 rows and Ncol cols (variables)
         lp = lp_solve::make_lp(0,Ncol);
         assert(lp != NULL);
-
         //Going to add rows (constraints) one at a time.
         lp_solve::set_add_rowmode(lp, true);
 
@@ -206,9 +193,9 @@ void lp_1_ai::play_turn()
         map_location l;
         std::pair<locItor, locItor> lrange;
         size_t cnt;
-        for (locItor i = slotMap->begin(); i != slotMap->end(); i = slotMap->upper_bound(i->first))
+        for (locItor k = slotMap->begin(); k != slotMap->end(); k = slotMap->upper_bound(k->first)) //grab bunches of attacks with same slot
         {
-            l = i->first;
+            l = k->first;
             cnt = slotMap->count(l);
 
             j = 0;
@@ -217,14 +204,14 @@ void lp_1_ai::play_turn()
 
             lrange = slotMap->equal_range(l);
 
-            //for each entry in this range, add a 1 in the row for this constraint, at the column specified at value
+            //for each attack corresponding to this slot, add a 1 in the row for this constraint, in the column for that attack
             while (lrange.first != lrange.second) {
                 col[j] = lrange.first->second;
                 row[j++] = (REAL) 1.0;
                 ++lrange.first;
             }
 
-            ret = lp_solve::add_constraintex(lp,j,row,col, lp_solve::LE, 1);
+            ret = lp_solve::add_constraintex(lp,j,row,col, lp_solve::LE, 1); //the sum of these vars should be less than one, as the slot can be used only once
             assert(ret);
 
             free(col);
@@ -234,10 +221,9 @@ void lp_1_ai::play_turn()
         DBG_AI << "added slot constraints" << std::endl;
 
         //Iterate over the "units" and add a 1 in each column for an attack that this unit could make
-        //std::pair<unitItor, unitItor> urange;
-        for (locItor i = unitMap->begin(); i != unitMap->end(); i = unitMap->upper_bound(i->first))
+        for (locItor k = unitMap->begin(); k != unitMap->end(); k = unitMap->upper_bound(k->first))
         {
-            l = i->first;
+            l = k->first;
             cnt = unitMap->count(l);
 
             j = 0;
@@ -246,14 +232,14 @@ void lp_1_ai::play_turn()
 
             lrange = unitMap->equal_range(l);
 
-            //for each entry in this range, add a 1 in the row for this constraint, at the column specified at value
+            //for each entry corresponding to this attacker, add a 1 in the row for this constraint, in the column for that attack
             while (lrange.first != lrange.second) {
                 col[j] = lrange.first->second;
                 row[j++] = (REAL) 1.0;
                 ++lrange.first;
             }
 
-            ret = lp_solve::add_constraintex(lp,j,row,col, lp_solve::LE, 1);
+            ret = lp_solve::add_constraintex(lp,j,row,col, lp_solve::LE, 1); //the sum of these vars should be less than one, as the unit can be used only once
             assert(ret);
 
             free(col);
@@ -263,11 +249,10 @@ void lp_1_ai::play_turn()
         DBG_AI << "added unit constraints" << std::endl;
 
         lp_solve::set_add_rowmode(lp,lp_solve::FALSE);
-        j=0;
 
+        j=0;
         for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
             if(current_team().is_enemy(i->side()) && !i->incapacitated()) {        
-                 //map_location adjacent_tiles[6];
                  get_adjacent_tiles(i->get_location(),adjacent_tiles);
                  for(size_t n = 0; n != 6; ++n) {
                      range = dstsrc.equal_range(adjacent_tiles[n]);
@@ -276,12 +261,9 @@ void lp_1_ai::play_turn()
                          const map_location& dst = range.first->first;
                          const map_location& src = range.first->second;
                          //these are dst and src for the attacking unit
-
                          const unit_map::const_iterator un = units_.find(src);
                          assert(un != units_.end());
-
                          //const int chance_to_hit = un->second.defense_modifier(get_info().map,terrain);
-
                          //This code modified from attack::perform() in attack.cpp
                          {
                               /*
@@ -297,12 +279,10 @@ void lp_1_ai::play_turn()
                               combatant attacker(bc_->get_attacker_stats());
                               combatant defender(bc_->get_defender_stats());
                               attacker.fight(defender,false);
-                              const REAL gold_inflicted = (static_cast<double>(i->hitpoints()) - defender.average_hp()) * i->cost() / i->max_hitpoints();
                          
                               lp_solve::set_binary(lp, ++j, lp_solve::TRUE); //set all variables to binary. columns numbered from 1!
-                              lp_solve::set_obj(lp, j, gold_inflicted);
-                         }
-
+                              lp_solve::set_obj(lp, j, (static_cast<REAL>(i->hitpoints()) - defender.average_hp()) * i->cost() / i->max_hitpoints()); 
+                         }    //value of an attack is the expected gold-adjusted damage inflicted.
                          ++range.first;
                      }
                  }
@@ -312,8 +292,8 @@ void lp_1_ai::play_turn()
         lp_solve::set_maxim(lp);
         lp_solve::set_verbose(lp, LP_SOLVE_LOG_MODE);
 
-clock_t c1 = clock();
-double runtime_diff_ms = ((double) c1 - c0) * 1000. / CLOCKS_PER_SEC;
+        clock_t c1 = clock();
+        double runtime_diff_ms = ((double) c1 - c0) * 1000. / CLOCKS_PER_SEC;
 
         LOG_AI << "Took " << runtime_diff_ms << " ms to make LP.\n";
         //LOG_AI << "Here's my LP in file temp.lp:\n";
@@ -330,23 +310,11 @@ double runtime_diff_ms = ((double) c1 - c0) * 1000. / CLOCKS_PER_SEC;
         LOG_AI << "Done. Took " << runtime_diff_ms << " ms to solve.\n";
         assert(ret == lp_solve::OPTIMAL);
 
-/*  if(ret == 0) {
-    // a solution is calculated, now lets get some results 
+        col = NULL;
+        row = (REAL*) malloc(Ncol * sizeof(*row));
+        ret = lp_solve::get_variables(lp, row);
+        assert(ret == lp_solve::TRUE);
 
-    // objective value 
-    printf("Objective value: %f\n", get_objective(lp));
-
-    // variable values */
-    col = NULL;
-    row = (REAL*) malloc(Ncol * sizeof(*row));
-    ret = lp_solve::get_variables(lp, row);
-    assert(ret == lp_solve::TRUE);
-/*    for(j = 0; j < Ncol; j++)
-      printf("%s: %f\n", get_col_name(lp, j + 1), row[j]);
-
-    // we are done now 
-  }
-*/
         j = 0;
         for(unit_map::const_iterator i = units_.begin(); i != units_.end(); ++i) {
             if(current_team().is_enemy(i->side()) && !i->incapacitated()) {        
@@ -355,38 +323,23 @@ double runtime_diff_ms = ((double) c1 - c0) * 1000. / CLOCKS_PER_SEC;
                      range = dstsrc.equal_range(adjacent_tiles[n]);
                      //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
                      while(range.first != range.second) {
-                         const map_location& dst = range.first->first;
-                         const map_location& src = range.first->second;
-                         //these are dst and src for the attacking unit
-
-                         //const unit_map::const_iterator un = units_.find(src);
-                         //assert(un != units_.end());
-                         //if (un != units_.end()) {
-                             if (row[j++] > .01) {
-                                execute_move_action(src, dst);
-                             } 
-                         //}
-                         //else
-                         //{
-                         //    DBG_AI << "hmm assert failed somehow line 388" << std::endl;
-                         //}
+                         if (row[j++] > .01) {
+                            execute_move_action(range.first->second, range.first->first); //dst = range.first->first, src = range.first->second, hence name dstsrc...
+                         } 
                          ++range.first;
                      }
                  }
             }
         }
 
-  /* free allocated memory */
-  if(row != NULL)
-    free(row);
-  if(col != NULL)
-    free(col);
-
-  if(lp != NULL) {
-    /* clean up such that all used memory by lpsolve is freed */
-    lp_solve::delete_lp(lp);
-  }
-
+        /* free allocated memory */
+        if(row != NULL)
+          free(row);
+        if(col != NULL)
+          free(col);
+        if(lp != NULL) {
+          lp_solve::delete_lp(lp);  /* clean up such that all used memory by lpsolve is freed */
+        }
 }
 
 // **********************************************************************************************************
@@ -551,7 +504,6 @@ void lp_2_ai::play_turn()
                  DBG_AI << "Total Ncol: " << Ncol << std::endl;
                  if (Ncol > 0) 
                  {
-     
 
                  //Now we have the constraint matrix for our LP. Start with 0 rows and Ncol+1 cols (variables), since we have t in addition.
                  lp = lp_solve::make_lp(0,Ncol+1);
@@ -637,11 +589,11 @@ void lp_2_ai::play_turn()
                  //lp_solve::add_constraintex(lp, 1, row, col, lp_solve::GE, 0);
 
 #ifdef MCLP_DEBUG
-                 lp_solve::set_col_name(lp, Ncol+1, "t");
+                 lp_solve::set_col_name(lp, Ncol+1, (char *)"t");
 #endif
                  lp_solve::set_lowbo(lp, Ncol+1, 0);
 
-                 lp_solve::set_obj(lp, Ncol+1, -(REAL) i->hitpoints() * 100); //because CTH is an integer
+                 lp_solve::set_obj(lp, Ncol+1, -(REAL) i->hitpoints() * 100); //* 100 because CTH is an integer
 
                  //Now add fractional constraints: d^t * y + \beta t = 1, and objective c^t y. 
                  //c is mean damage of an attack, d is variance, alpha should be negative of hitpoints in this model. 
@@ -663,17 +615,14 @@ void lp_2_ai::play_turn()
 
                  for(size_t n = 0; n != 6; ++n) {
                      range = dstsrc.equal_range(adjacent_tiles[n]);
-                     //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
                      while(range.first != range.second) {
                          const map_location& dst = range.first->first;
                          const map_location& src = range.first->second;
-                         //these are dst and src for the attacking unit
 
                          const unit_map::const_iterator un = units_.find(src);
                          assert(un != units_.end());
 
                          //const int chance_to_hit = un->second.defense_modifier(get_info().map,terrain);
-
 #ifdef MCLP_DEBUG
                          std::stringstream s1,s2,s3;
                          s1 << src; s2 << dst; s3 << i->get_location();
@@ -681,8 +630,8 @@ void lp_2_ai::play_turn()
                          lp_solve::set_col_name(lp, j+1, cstr);
 #endif
                          lp_solve::set_lowbo(lp, j+1, 0); //columns numbered from 1
-                         //This code modified from attack::perform() in attack.cpp
-                         {
+                         
+                         { //This code modified from attack::perform() in attack.cpp
                               /*
 				battle_context(const unit_map &units,
 					               const map_location& attacker_loc, const map_location& defender_loc,
@@ -693,15 +642,13 @@ void lp_2_ai::play_turn()
                               battle_context *bc = new battle_context(units_, dst, i->get_location(), -1, -1, 0.0, NULL, &(*un));
 
                               const battle_context_unit_stats a = bc->get_attacker_stats();
-
                               //const REAL expected_damage = a.damage * a.cth * a.num_blows;
                               //const REAL variance_damage = a.damage * a.damage * a.cth * a.num_blows;
-                         
                               shortcol[0] = j+1;
                               lp_solve::add_constraintex(lp, 2, shortrow, shortcol, lp_solve::LE, 0); //This adds the y_i <= t constraint, corresponding to x_i <= 1
 
                               //making d^T y part of d^T * y + beta *t = 1
-                              //col[j] = j;
+                              //col[j] = j+1;
                               row[j] = static_cast<REAL> (a.damage * a.damage * a.chance_to_hit * a.num_blows);
  
                               lp_solve::set_obj(lp, ++j, static_cast<REAL> (a.damage * a.chance_to_hit * a.num_blows));
@@ -714,9 +661,9 @@ void lp_2_ai::play_turn()
                 //col[j] = j+1; //At this point j = Ncol, the t variable, and we chose beta = 1 for well-conditioning, although properly should be 0.
                  row[j] = 1; 
 
-                 lp_solve::add_constraint(lp,row, lp_solve::EQ, 1);
+                 lp_solve::add_constraint(lp,row, lp_solve::EQ, 1); //this adds d^T y + beta * t = 1
 
-                 lp_solve::set_add_rowmode(lp,lp_solve::FALSE);
+                 lp_solve::set_add_rowmode(lp,lp_solve::FALSE); //the template file suggested to turn this off before solving.
 
                  lp_solve::set_maxim(lp);
                  lp_solve::set_verbose(lp, LP_SOLVE_LOG_MODE);
@@ -730,11 +677,10 @@ void lp_2_ai::play_turn()
                  LOG_AI << "Here's my LP to attack " << i->get_location() << " in file " << file_name << std::endl;
                  ret = lp_solve::write_lp(lp, file_name);
 #endif
-
                  LOG_AI << "Solving...\n";
 
                  c0 = clock();
-                  // ...
+
                  ret = lp_solve::solve(lp);
 
                  c1 = clock();
@@ -746,82 +692,58 @@ void lp_2_ai::play_turn()
                         DBG_AI << "**** NOT OPTIMAL ****" << std::endl;
                         //DBG_AI << "Here's my LP in file temp.lp:\n";
                         //ret = lp_solve::write_lp(lp, "temp.lp");
-
                         DBG_AI << "Here's my data structures:\n" << "Slot Map:\n" << slotMap << std::endl << "Unit Map:\n" << unitMap << std::endl;
                  }
                  this_opt = lp_solve::get_objective(lp);
 
+#ifdef MCLP_DEBUG
                  DBG_AI << "Current Opt = " << current_opt << std::endl;
                  DBG_AI << "This Opt = " << this_opt << std::endl;
-
-
+#endif
                  if( this_opt > current_opt ) {
-
                       DBG_AI << "*** Better than best so far" << std::endl;
-                  /*  if(ret == 0) {
-                      // a solution is calculated, now lets get some results 
 
-                      // objective value 
-                      printf("Objective value: %f\n", get_objective(lp));
-
-                      // variable values */
-                      //row = (REAL*) malloc(Ncol * sizeof(*row));
                       current_opt = this_opt;
-                      ret = lp_solve::get_variables(lp, row);
+                      ret = lp_solve::get_variables(lp, row); //row is already the right size
                       assert(ret == lp_solve::TRUE);
 
                       best_moves_list = new std::vector<std::pair<map_location, map_location> >();
-                  /*    for(j = 0; j < Ncol; j++)
-                        printf("%s: %f\n", get_col_name(lp, j + 1), row[j]);
-
-                      // we are done now 
-                      }
-                  */
-                 //now sparsify the results vector, and store opt (also compute exact ctk value?)
-                          j = 0;
-                          best_target = i->get_location();
-                          DBG_AI << "New Best Moves List:" << std::endl;
-                          for(size_t n = 0; n != 6; ++n) {
-                              range = dstsrc.equal_range(adjacent_tiles[n]);
-                              //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
-                              while(range.first != range.second) {
-                                  const map_location& dst = range.first->first;
-                                  const map_location& src = range.first->second;
-                                  //these are dst and src for the attacking unit
-         
-                                  //const unit_map::const_iterator un = units_.find(src);
-                                  //assert(un != units_.end());
-         
-                                  //y = xt, so divide by t which is in row[Ncol]. if this is > 0 then move.
-                                  if ((row[j++]/row[Ncol]) > .01) { 
-                                      best_moves_list->push_back(std::make_pair<map_location, map_location> (src, dst));
-                                      DBG_AI << src << " -> " << dst << std::endl; 
-                                  }//{execute_move_action(src, dst, false, true);}
-                                  ++range.first;
-                              }
+                      //now sparsify the results vector, and store opt (also compute exact ctk value?)
+                      j = 0;
+                      best_target = i->get_location();
+                      DBG_AI << "New Best Moves List:" << std::endl;
+                      for(size_t n = 0; n != 6; ++n) {
+                          range = dstsrc.equal_range(adjacent_tiles[n]);
+                          while(range.first != range.second) {
+                              const map_location& dst = range.first->first;
+                              const map_location& src = range.first->second;         
+                              //y = xt, so divide by t which is in row[Ncol]. if this is > 0 then move.
+                              if ((row[j++]/row[Ncol]) > .01) { 
+                                  best_moves_list->push_back(std::make_pair<map_location, map_location> (src, dst));
+                                  DBG_AI << src << " -> " << dst << std::endl; 
+                              }//{execute_move_action(src, dst, false, true);}
+                              ++range.first;
                           }
-                          DBG_AI << "End of list." << std::endl;
-                      } else //if opt better than best end
-                      { DBG_AI << "Not the best" << std::endl; }
-                 /* free allocated memory */
-                 if(row != NULL)
-                   free(row);
-                 if(col != NULL)
-                   free(col);
-
-                 if(shortrow != NULL)
-                   free(shortrow);
-                 if(shortcol != NULL)
-                   free(shortcol);
-
-                 if(lp != NULL) {
-                   /* clean up such that all used memory by lpsolve is freed */
-                   lp_solve::delete_lp(lp);
-                 }
-                 } //if ncol > 0 end
+                      }
+                      DBG_AI << "End of list." << std::endl;
+                  } else //if opt better than best end
+                  { DBG_AI << "Not the best" << std::endl; }
+                  /* free allocated memory */
+                  if(row != NULL)
+                     free(row);
+                  if(col != NULL)
+                     free(col);
+                  if(shortrow != NULL)
+                     free(shortrow);
+                  if(shortcol != NULL)
+                     free(shortcol);
+                  if(lp != NULL) {
+                     /* clean up such that all used memory by lpsolve is freed */
+                     lp_solve::delete_lp(lp);
+                  }
+                  } //if ncol > 0 end
             } //if end
         } // for end
-
         DBG_AI << "Making best moves: " << std::endl;
 
         std::pair<map_location, map_location> temp_pair;
@@ -829,11 +751,10 @@ void lp_2_ai::play_turn()
         {
               temp_pair = best_moves_list->back(); 
               best_moves_list->pop_back();
-              DBG_AI << "Mv: " << temp_pair.first << " -> " << temp_pair.second << ", Attack " << best_target << std::endl;
+              DBG_AI << "Move: " << temp_pair.first << " -> " << temp_pair.second << ", Attack " << best_target << std::endl;
               execute_move_action(temp_pair.first, temp_pair.second);
               execute_attack_action(temp_pair.second, best_target, -1);
         }
-
         DBG_AI << "Done." << std::endl;
 }
 

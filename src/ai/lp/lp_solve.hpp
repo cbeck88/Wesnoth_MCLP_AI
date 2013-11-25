@@ -26,6 +26,7 @@ namespace lp_solve
         void set_verbose(lprec*, int);
         int solve(lprec*);
         unsigned char get_variables(lprec*, REAL*);
+        unsigned char get_variables_ptr(lprec*, REAL**);
         REAL get_objective(lprec*);
         void delete_lp(lprec*);
 
