@@ -43,7 +43,13 @@ static lg::log_domain log_ai("ai/general");
 #pragma warning(disable:4250)
 #endif
 
-#define MCLP_DEBUG
+//#define MCLP_DEBUG
+
+#ifdef MCLP_DEBUG
+#define LP_SOLVE_LOG_MODE lp_solve::FULL
+#else
+#define LP_SOLVE_LOG_MODE lp_solve::IMPORTANT
+#endif
 
 namespace ai {
 
@@ -303,7 +309,7 @@ void lp_1_ai::play_turn()
         }
 
         lp_solve::set_maxim(lp);
-        lp_solve::set_verbose(lp, lp_solve::FULL);
+        lp_solve::set_verbose(lp, LP_SOLVE_LOG_MODE);
 
 clock_t c1 = clock();
 double runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
@@ -703,7 +709,7 @@ void lp_2_ai::play_turn()
                  lp_solve::set_add_rowmode(lp,lp_solve::FALSE);
 
                  lp_solve::set_maxim(lp);
-                 lp_solve::set_verbose(lp, lp_solve::FULL);
+                 lp_solve::set_verbose(lp, LP_SOLVE_LOG_MODE);
 
                  c1 = clock();
                  runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
