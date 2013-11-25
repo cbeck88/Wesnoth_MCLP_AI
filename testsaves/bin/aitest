@@ -66,6 +66,12 @@ if [ $# -ge 2 ]; then
    fi
 fi
 
+echo "Removing *.lp files in "
+pwd
+rm *.lp
+
+echo "Launching Wesnoth"
+
 OPTIONS="--data-dir ../../../wesnoth-old/ --load $FINAL.gz --log-debug=ai/mod,ai/general,ai/config,ai/manager ${@:4}"
 echo "OPTIONS: "
 echo $OPTIONS

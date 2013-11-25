@@ -25,6 +25,7 @@
 #include "../../pathfind/pathfind.hpp"
 
 #include <time.h>
+#include <stdio.h>
 #include <boost/foreach.hpp>
 
 #include <iterator>
@@ -41,6 +42,8 @@ static lg::log_domain log_ai("ai/general");
 //silence "inherits via dominance" warnings
 #pragma warning(disable:4250)
 #endif
+
+#define MCLP_DEBUG
 
 namespace ai {
 
@@ -425,6 +428,12 @@ config lp_2_ai::to_config() const
 void lp_2_ai::play_turn()
 {
         LOG_AI << "lp_2_ai play_turn()" << std::endl;
+
+#ifdef MCLP_DEBUG
+        char cstr[40];
+        char file_name[20];
+        int file_counter = 0;
+#endif
 	//game_events::fire("ai turn");
         typedef move_map::const_iterator Itor;
         typedef std::multimap<map_location,int>::iterator locItor;
@@ -464,6 +473,7 @@ void lp_2_ai::play_turn()
 
         std::vector<std::pair<map_location, map_location> > *best_moves_list = NULL;
         map_location best_target;
+        REAL this_opt;
         REAL current_opt = -1000000; //this should be set to theoretical smallest real number.
 
         map_location adjacent_tiles[6];
@@ -610,9 +620,12 @@ void lp_2_ai::play_turn()
                  //col[0] = Ncol + 1;
                  //lp_solve::add_constraintex(lp, 1, row, col, lp_solve::GE, 0);
 
+#ifdef MCLP_DEBUG
+                 lp_solve::set_col_name(lp, Ncol+1, "t");
+#endif
                  lp_solve::set_lowbo(lp, Ncol+1, 0);
 
-                 lp_solve::set_obj(lp, Ncol+1, -(REAL) i->hitpoints());
+                 lp_solve::set_obj(lp, Ncol+1, -(REAL) i->hitpoints() * 100); //because CTH is an integer
 
                  //Now add fractional constraints: d^t * y + \beta t = 1, and objective c^t y. 
                  //c is mean damage of an attack, d is variance, alpha should be negative of hitpoints in this model. 
@@ -645,6 +658,12 @@ void lp_2_ai::play_turn()
 
                          //const int chance_to_hit = un->second.defense_modifier(get_info().map,terrain);
 
+#ifdef MCLP_DEBUG
+                         std::stringstream s1,s2,s3;
+                         s1 << src; s2 << dst; s3 << i->get_location();
+                         sprintf(cstr, "(%s->%s\\>%s)", s1.str().c_str(), s2.str().c_str(), s3.str().c_str());
+                         lp_solve::set_col_name(lp, j+1, cstr);
+#endif
                          lp_solve::set_lowbo(lp, j+1, 0); //columns numbered from 1
                          //This code modified from attack::perform() in attack.cpp
                          {
@@ -663,19 +682,20 @@ void lp_2_ai::play_turn()
                               //const REAL variance_damage = a.damage * a.damage * a.cth * a.num_blows;
                          
                               shortcol[0] = j+1;
-                              lp_solve::add_constraintex(lp, 2, row, col, lp_solve::LE, 0); //This adds the y_i <= t constraint, corresponding to x_i <= 1
+                              lp_solve::add_constraintex(lp, 2, shortrow, shortcol, lp_solve::LE, 0); //This adds the y_i <= t constraint, corresponding to x_i <= 1
 
                               //making d^T y part of d^T * y + beta *t = 1
                               //col[j] = j;
                               row[j] = static_cast<REAL> (a.damage * a.damage * a.chance_to_hit * a.num_blows);
-
-                              lp_solve::set_obj(lp, j++, static_cast<REAL> (a.damage * a.chance_to_hit * a.num_blows));
+ 
+                              lp_solve::set_obj(lp, ++j, static_cast<REAL> (a.damage * a.chance_to_hit * a.num_blows));
                          }
 
                          ++range.first;
                      }
                  }
-                 //col[j] = j+1; //At this point j = Ncol, the t variable, and we chose beta = 1 for well-conditioning, although properly should be 0.
+                 assert(j == Ncol); 
+                //col[j] = j+1; //At this point j = Ncol, the t variable, and we chose beta = 1 for well-conditioning, although properly should be 0.
                  row[j] = 1; 
 
                  lp_solve::add_constraint(lp,row, lp_solve::EQ, 1);
@@ -689,8 +709,12 @@ void lp_2_ai::play_turn()
                  runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
 
                  LOG_AI << "Took " << runtime_diff_ms << " ms to make LP.\n";
-                 //LOG_AI << "Here's my LP in file temp.lp:\n";
-                 //ret = lp_solve::write_lp(lp, "temp.lp");
+#ifdef MCLP_DEBUG
+                 sprintf(file_name, "temp%3u.lp", ++file_counter);
+                 LOG_AI << "Here's my LP to attack " << i->get_location() << " in file " << file_name << std::endl;
+                 ret = lp_solve::write_lp(lp, file_name);
+#endif
+
                  LOG_AI << "Solving...\n";
 
                  c0 = clock();
@@ -704,15 +728,18 @@ void lp_2_ai::play_turn()
                  if(ret != lp_solve::OPTIMAL)
                  {
                         DBG_AI << "**** NOT OPTIMAL ****" << std::endl;
-                        DBG_AI << "Here's my LP in file temp.lp:\n";
-                        ret = lp_solve::write_lp(lp, "temp.lp");
+                        //DBG_AI << "Here's my LP in file temp.lp:\n";
+                        //ret = lp_solve::write_lp(lp, "temp.lp");
 
-                        DBG_AI << "Here's my data strucutres:\n" << "Slot Map:\n" << slotMap << std::endl << "Unit Map:\n" << unitMap << std::endl;
+                        DBG_AI << "Here's my data structures:\n" << "Slot Map:\n" << slotMap << std::endl << "Unit Map:\n" << unitMap << std::endl;
                  }
+                 this_opt = lp_solve::get_objective(lp);
 
                  DBG_AI << "Current Opt = " << current_opt << std::endl;
+                 DBG_AI << "This Opt = " << this_opt << std::endl;
 
-                 if( lp_solve::get_objective(lp) > current_opt ) {
+
+                 if( this_opt > current_opt ) {
 
                       DBG_AI << "*** Better than best so far" << std::endl;
                   /*  if(ret == 0) {
@@ -723,6 +750,7 @@ void lp_2_ai::play_turn()
 
                       // variable values */
                       //row = (REAL*) malloc(Ncol * sizeof(*row));
+                      current_opt = this_opt;
                       ret = lp_solve::get_variables(lp, row);
                       assert(ret == lp_solve::TRUE);
 
@@ -778,13 +806,14 @@ void lp_2_ai::play_turn()
             } //if end
         } // for end
 
-        DBG_AI << "Making best moves: " << best_moves_list << std::endl;
+        DBG_AI << "Making best moves: " << std::endl;
 
         std::pair<map_location, map_location> temp_pair;
         while (!best_moves_list->empty())
         {
               temp_pair = best_moves_list->back(); 
               best_moves_list->pop_back();
+              DBG_AI << "Mv: " << temp_pair.first << " -> " << temp_pair.second << ", Attack " << best_target << std::endl;
               execute_move_action(temp_pair.first, temp_pair.second);
               execute_attack_action(temp_pair.second, best_target, -1);
         }

@@ -20,7 +20,9 @@ namespace lp_solve
         unsigned char set_binary(lprec*,int, unsigned char);
         unsigned char set_obj(lprec*,int,REAL);
         unsigned char set_lowbo(lprec*, int, REAL);
+        unsigned char set_col_name(lprec*,int, char*);
         void set_maxim(lprec*);
+        void set_minim(lprec*);
         void set_verbose(lprec*, int);
         int solve(lprec*);
         unsigned char get_variables(lprec*, REAL*);
