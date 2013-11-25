@@ -513,6 +513,15 @@ void lp_2_ai::play_turn()
                  // Ax \leq bt
                  // t \geq 0
                  // d^T y + \beta t = 1
+                 //
+                 // 
+                 // Our program will have a column (corresponds to variable x_i) for each possible defender, slot and attacker (and weapon choice).
+                 //
+                 // The basic constraints Ax \leq b will say, each attacker used at most once, each slot used at most once. 
+                 // We will set c^T_i = Expectation of damage to defender of attack @ column i.
+                 //             d^T_i = Variance    of damage to defender ...
+                 //             alpha = - Hitpoints of defender
+                 //             beta  = 1
 
                  get_adjacent_tiles(i->get_location(),adjacent_tiles);
                  //DBG_AI << "Got tiles" << std::endl;
