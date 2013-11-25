@@ -43,6 +43,7 @@ static lg::log_domain log_ai("ai/general");
 #pragma warning(disable:4250)
 #endif
 
+//Uncomment this to get full debugging output
 //#define MCLP_DEBUG
 
 #ifdef MCLP_DEBUG
@@ -312,7 +313,7 @@ void lp_1_ai::play_turn()
         lp_solve::set_verbose(lp, LP_SOLVE_LOG_MODE);
 
 clock_t c1 = clock();
-double runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
+double runtime_diff_ms = ((double) c1 - c0) * 1000. / CLOCKS_PER_SEC;
 
         LOG_AI << "Took " << runtime_diff_ms << " ms to make LP.\n";
         //LOG_AI << "Here's my LP in file temp.lp:\n";
@@ -514,11 +515,11 @@ void lp_2_ai::play_turn()
                  // d^T y + \beta t = 1
 
                  get_adjacent_tiles(i->get_location(),adjacent_tiles);
-                 DBG_AI << "Got tiles" << std::endl;
+                 //DBG_AI << "Got tiles" << std::endl;
                  for(size_t n = 0; n != 6; ++n) {
                      range = dstsrc.equal_range(adjacent_tiles[n]);
                      //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
-                     DBG_AI << "Got range" << std::endl;
+                     //DBG_AI << "Got range" << std::endl;
                      while(range.first != range.second) {
                          //columns numbered from 1 in lib lp_solve
 
@@ -712,7 +713,7 @@ void lp_2_ai::play_turn()
                  lp_solve::set_verbose(lp, LP_SOLVE_LOG_MODE);
 
                  c1 = clock();
-                 runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
+                 runtime_diff_ms = ((double)c1 - c0) * 1000. / CLOCKS_PER_SEC;
 
                  LOG_AI << "Took " << runtime_diff_ms << " ms to make LP.\n";
 #ifdef MCLP_DEBUG
@@ -728,7 +729,7 @@ void lp_2_ai::play_turn()
                  ret = lp_solve::solve(lp);
 
                  c1 = clock();
-                 runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
+                 runtime_diff_ms = ((double)c1 - c0) * 1000. / CLOCKS_PER_SEC;
 
                  LOG_AI << "Done. Took " << runtime_diff_ms << " ms to solve.\n";
                  if(ret != lp_solve::OPTIMAL)
