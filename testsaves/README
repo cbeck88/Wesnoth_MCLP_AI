@@ -1,4 +1,6 @@
-See aitest usage for details.
+To use the testsuite, run /bin/aitest. See aitest usage for details.
+
+CONTENTS
 
 /original1.10/         Original 1.10 replay files.
 /human1.11/            Replays converted to 1.11 and saved at critical point.
@@ -15,3 +17,19 @@ scen_code.aiplayer should contain "1" or "2" depending on who moves next in repl
 
 Every ai_type corresponds to a WML block in /ai-cfg/.
 
+
+
+HOW TO ADD REPLAYS TO THE SUITE:
+1) Take any replay, load it in 1.11 replay viewer (check the show replay button).
+Advance to the turn of interest and save the replay, in /human1.11/, as a compressed .gz file.
+2) Make a matching .aiplayer text file, indicating which player moves first in this replay. 
+E.g. echo "1" > /conf/G4.aiplayer
+     echo "2" > /conf/mygame.aiplayer
+3) Save the original as well in case you want to compare ai actions to human actions later.
+
+WHAT EXACTLY DOES THE SUITE DO
+The scripts in the suite will unzip the replay and use sed to replace the [ai] tag of a particular side
+with the contents of some file. They will also set the controller key to value "ai". The result is zipped
+and saved in ~/.local/share/wesnoth/1.11/saves.
+
+The scripts will also delete .lp files from /testsaves/bin, as the debugging mode of MCLP may generate these.
