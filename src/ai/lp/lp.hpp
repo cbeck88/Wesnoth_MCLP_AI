@@ -36,6 +36,8 @@ public:
     virtual int end();
 };*/
 
+
+//LP is a wrapper for a linear program with boolean variables and exlclusivity constraints.
 class LP /*: public Boolean_Program*/ {
 public:
     LP(int);
@@ -58,6 +60,9 @@ private:
     lprec* lp;
     REAL **vars;
 };
+
+// FracLP is a wrapper implementing linear fractional programming in terms of linear programming.
+// See wikipedia linear fractional programming.
 
 class FracLP /*: public Boolean_Program*/ {
 public:
@@ -89,5 +94,16 @@ private:
     REAL* denom_row; //used to hold the denominator constraint, and after solve is called, holds the results. this is a bit hacky.
     bool not_solved_yet; //in this implementation you are not allowed to change denominator entries after calling solve().
 };
+
+//
+// max c^T * x + \alpha / d^T x + \beta
+// Ax \leq b
+//
+// is equivalent to
+// 
+// max c^T * y + \alpha t
+// Ax \leq bt
+// t \geq 0
+// d^T y + \beta t = 1
 
 #endif
