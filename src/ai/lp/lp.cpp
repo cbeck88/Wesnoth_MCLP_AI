@@ -231,3 +231,13 @@ REAL FracLP::get_obj()
 {
     return lp_solve::get_objective(lp);
 }
+
+unsigned char LP::write_lp(char * file)
+{
+    return lp_solve::write_lp(lp,file);
+}
+
+unsigned char FracLP::write_lp(char * file)
+{
+    return lp_solve::write_lp(lp,file);
+}

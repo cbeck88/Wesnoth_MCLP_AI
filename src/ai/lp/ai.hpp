@@ -77,6 +77,7 @@ public:
     
     unsigned char remove_col( fwd_ptr );
 
+    unsigned char set_boolean ( fwd_ptr );
     unsigned char set_obj (fwd_ptr, REAL );
     unsigned char set_col_name (fwd_ptr, char *);
 
@@ -84,6 +85,8 @@ public:
 
     REAL get_obj();
     REAL get_var(fwd_ptr);
+
+    unsigned char write_lp (char *);
 
 private:
     LP *lp;
@@ -98,7 +101,7 @@ private:
     //Rather than store ints for columns, store pointers to this list so we can delete easily.
     std::list<int> cols;
 
-    fwd_ptr bool_ptr;
+//    fwd_ptr bool_ptr;
 };
 
 /** A class that manages an LP which estimates opt ctk for a target. **/
@@ -122,6 +125,8 @@ public:
 
     unsigned char remove_col( fwd_ptr );
 
+    unsigned char set_boolean ( fwd_ptr );
+
     unsigned char set_obj_num(fwd_ptr ptr, REAL );
     unsigned char set_obj_denom(fwd_ptr ptr, REAL );
     unsigned char set_obj_num_constant(REAL );
@@ -132,6 +137,8 @@ public:
 
     REAL get_obj();
     REAL get_var(fwd_ptr);
+
+    unsigned char write_lp (char *);
     
 private:
     FracLP *lp;
@@ -146,7 +153,7 @@ private:
     //Rather than store ints for columns, store pointers to this forward list so we can delete easily.
     std::list<int> cols;
 
-    fwd_ptr bool_ptr;
+//    fwd_ptr bool_ptr;
 };
 
 /** An ai that uses LP heuristics to try to find the most efficiently aggressive move. */

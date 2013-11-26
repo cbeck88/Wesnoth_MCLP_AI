@@ -55,6 +55,8 @@ public:
     unsigned char set_col_name(int, char*);   
     REAL get_var(int);
     REAL get_obj();
+
+    unsigned char write_lp(char *);
 private:
     int Ncol;
     lprec* lp;
@@ -85,6 +87,8 @@ public:
     unsigned char set_col_name(int, char*);    
     REAL get_var(int);
     REAL get_obj();
+
+    unsigned char write_lp(char *);
 private:
     int Ncol;
     lprec* lp;
