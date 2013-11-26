@@ -18,7 +18,7 @@
 #define AI_LP_AI_HPP_INCLUDED
 
 //Uncomment this to get full debugging output
-//#define MCLP_DEBUG
+#define MCLP_DEBUG
 
 #ifdef MCLP_DEBUG
 #define LP_SOLVE_LOG_MODE LP_SOLVE_FULL
@@ -65,7 +65,7 @@ typedef std::list<int>::iterator fwd_ptr;
 class damageLP {
 public:
     damageLP():lp(NULL),slotMap(), unitMap(), Ncol(0),cols(){} //defenderMap()
-    //~damageLP() { if (lp != NULL) { lp_solve:delete_lp(lp); }
+    ~damageLP() { if (lp != NULL) { delete(lp); } }
 
     void insert( map_location src, map_location dst, map_location def);
     void make_lp();
@@ -113,7 +113,7 @@ private:
 class ctkLP {
 public:
     ctkLP(map_location ml):lp(NULL),slotMap(), unitMap(),defender(ml),Ncol(0),cols() {}
-    //~ctkLP() { if (lp != NULL) { lp_solve::delete_lp(lp); }
+    ~ctkLP() { if (lp != NULL) { delete(lp); } }
 
     void insert( map_location src, map_location dst);
     void make_lp();

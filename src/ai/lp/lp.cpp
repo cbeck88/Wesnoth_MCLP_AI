@@ -2,6 +2,7 @@
 
 static lg::log_domain log_ai("ai/general");
 #define ERR_AI LOG_STREAM(err, log_ai)
+#define DBG_AI LOG_STREAM(debug, log_ai)
 
 REAL FracLP::shortrow[] = {1,-1};
 
@@ -31,8 +32,13 @@ LP::LP(int n): Ncol(n),lp(NULL),vars(NULL)
 
 FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
 {   //Ncol is initialized to n, but we need Ncol + 1 for sizing with lp_solve.
+    DBG_AI << "FracLP(" << n << ")" << std::endl;
     denom_row = (REAL*) malloc( (++n) * sizeof(denom_row));
+    DBG_AI << "denom_row malloced: " << n << std::endl;
     lp = lp_solve::make_lp(0,n); //need to hold t variable in last column
+    DBG_AI << "lp made: " << n << std::endl;
+    DBG_AI << "Ncol = " << Ncol << std::endl;
+
     assert(lp != NULL);
 
     lp_solve::set_add_rowmode(lp, true);
@@ -61,6 +67,7 @@ unsigned char LP::set_boolean(int col)
 
 unsigned char FracLP::set_boolean(int col)
 {
+    DBG_AI << "FracLP::set_boolean. Ncol = " << Ncol << std::endl;
     if (lp_solve::set_lowbo(lp, col, (REAL) 0) != LP_SOLVE_TRUE) 
         return LP_SOLVE_FALSE;
 
@@ -107,6 +114,8 @@ unsigned char LP::row_LE_1(Map_Itor iter, Map_Itor end, int cnt)
 //template<class T> 
 unsigned char FracLP::row_LE_1(Map_Itor iter, Map_Itor end, int cnt)
 {
+    DBG_AI << "Row add start: Ncol = " << Ncol << std::endl;
+
     assert(cnt > 0);
 
     cnt++; // +1, need to include a spot for t variable.
@@ -131,6 +140,7 @@ unsigned char FracLP::row_LE_1(Map_Itor iter, Map_Itor end, int cnt)
     free(col);
     free(row);
 
+    DBG_AI << "Row add end: Ncol = " << Ncol << std::endl;
     return ret;
 }
 
@@ -157,6 +167,8 @@ unsigned char LP::solve()
 
 unsigned char FracLP::solve()
 {
+    DBG_AI << "FracLP::solve()'ing." << std::endl;
+    DBG_AI << "Ncol = " << Ncol << std::endl;
     not_solved_yet = false;
 
     if (lp_solve::add_constraint(lp, denom_row, LP_SOLVE_EQ, 1) != LP_SOLVE_TRUE) {
@@ -180,6 +192,7 @@ unsigned char FracLP::solve()
     if (lp_solve::get_variables(lp,denom_row) != LP_SOLVE_TRUE) {
         ERR_AI << "FracLP::solve() failed to get variables" << std::endl;
     };
+    DBG_AI << "Done: Ncol = " << Ncol << std::endl;
     return ret;
 }
 
@@ -195,6 +208,8 @@ unsigned char FracLP::set_obj_num(int col, REAL val)
 
 unsigned char FracLP::set_obj_num_constant(REAL val)
 {
+    DBG_AI << "FracLP::Set num constant " << val << std::endl;
+    DBG_AI << "Ncol = " << Ncol << std::endl;
     return lp_solve::set_obj(lp,Ncol+1, val);
 }
 
