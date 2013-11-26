@@ -76,6 +76,9 @@ manageable size.
 
 To build MCLP AI, 
 
+0. NOTE!! Most recent commit has some horrible memory corruption, I refactored too ambitiously... This is the most recent stable commit:
+bd73087d932711e220cf9c33efdf7eb7b2f75afe
+
 1. Make a folder to hold both projects, e.g. ~/wesnoth-src. Clone wesnoth-old and Wesnoth\_MCLP\_AI into this folder.
 
    (If MCLP_AI base folder is not a sibling of wesnoth-old, the only bad thing is that the testsaves suite won't work.)
