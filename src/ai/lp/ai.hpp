@@ -33,6 +33,7 @@
 
 #include <time.h>
 #include <list>
+#include <boost/shared_ptr.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -64,8 +65,8 @@ typedef std::list<int>::iterator fwd_ptr;
 
 class damageLP {
 public:
-    damageLP():lp(NULL),slotMap(), unitMap(), defenderMap(), Ncol(0),cols(){}
-    ~damageLP() { if (lp != NULL) { delete(lp); } }
+    damageLP():slotMap(), unitMap(), defenderMap(), Ncol(0),cols(){}
+    //~damageLP() { if (lp) {} else { delete(lp); } }
 
     void insert( map_location src, map_location dst, map_location def);
     void make_lp();
@@ -90,7 +91,7 @@ public:
     unsigned char write_lp (char *);
 
 private:
-    LP *lp;
+    boost::shared_ptr<LP> lp;
 
     //Each attacker destination "slot", and each attacker, becomes a row in LP since each unit and slot can be used only once.
     std::multimap<const map_location, col_ptr> slotMap; 
@@ -113,8 +114,8 @@ private:
 
 class ctkLP {
 public:
-    ctkLP(map_location ml):lp(NULL),slotMap(), unitMap(),defender(ml),Ncol(0),cols() {}
-    ~ctkLP() { if (lp != NULL) { delete(lp); } }
+    ctkLP(map_location ml): slotMap(), unitMap(),defender(ml),Ncol(0),cols() {}
+    //~ctkLP() { if (lp) {} else { delete(lp); } }
 
     void insert( map_location src, map_location dst);
     void make_lp();
@@ -142,7 +143,7 @@ public:
     unsigned char write_lp (char *);
     
 private:
-    FracLP *lp;
+    boost::shared_ptr<FracLP> lp;
 
     //Each attacker destination "slot", and each attacker, becomes a row in LP since each unit and slot can be used only once.
     std::multimap<const map_location, col_ptr> slotMap;

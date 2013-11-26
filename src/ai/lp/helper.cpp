@@ -53,7 +53,7 @@ typedef std::multimap<map_location,int>::iterator locItor;
 
 void damageLP::insert( const map_location src, const map_location dst, map_location target)
 {
-    if (lp != NULL) {
+    if (lp) {
        ERR_AI << "ERROR: Tried to insert to a damageLP after makelp." << std::endl;
        return;
     }
@@ -65,7 +65,7 @@ void damageLP::insert( const map_location src, const map_location dst, map_locat
 
 void ctkLP::insert(map_location src, map_location dst)
 {
-    if (lp != NULL) {
+    if (lp) {
        ERR_AI << "ERROR: Tried to insert to a ctkLP after makelp." << std::endl;
        return;
     }
@@ -148,7 +148,7 @@ void damageLP::make_lp()
 {
     //LP new_LP(Ncol); //this makes it on the stack... bad I think
     //lp = & new_LP;
-    lp = new LP(Ncol);
+    lp.reset(new LP(Ncol));
 
     lp->rows_LE_1(&slotMap);
     DBG_AI << "added slot constraints" << std::endl;
@@ -162,7 +162,7 @@ void ctkLP::make_lp()
 {
     //FracLP new_LP(Ncol); //this make it on the stack... bad I think
     //lp = & new_LP;
-    lp = new FracLP(Ncol);
+    lp.reset(new FracLP(Ncol));
 
     lp->rows_LE_1(&slotMap);
     DBG_AI << "added slot constraints" << std::endl;

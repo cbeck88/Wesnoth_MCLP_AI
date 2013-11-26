@@ -356,7 +356,7 @@ void lp_2_ai::play_turn()
         //gamemap& map_ = *resources::game_map;
 
         int Ncol = 0, ret;
-        ctkLP *lp = NULL; //(map_location::null_location);
+        boost::shared_ptr<ctkLP> lp; //(map_location::null_location);
         // for reference, LP_solve template file is here: http://lpsolve.sourceforge.net/5.5/formulate.htm
         //lprec *lp;
         //int *col = NULL, j, ret;
@@ -389,8 +389,7 @@ void lp_2_ai::play_turn()
 
         for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
             if(current_team().is_enemy(i->side()) && !i->incapacitated()) {
-                 ctkLP new_lp(i->get_location());
-                 lp = & new_lp;
+                 lp.reset(new ctkLP(i->get_location()));
                  //slotMap = new std::multimap<map_location, int>;
                  //unitMap = new std::multimap<map_location, int>;
                  Ncol = 0;        
