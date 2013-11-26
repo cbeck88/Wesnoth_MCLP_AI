@@ -77,13 +77,13 @@ public:
     
     unsigned char remove_col( fwd_ptr );
 
-    unsigned char set_obj (fwd_ptr&, REAL &);
-    unsigned char set_col_name (fwd_ptr&, char *);
+    unsigned char set_obj (fwd_ptr, REAL );
+    unsigned char set_col_name (fwd_ptr, char *);
 
     unsigned char solve();
 
     REAL get_obj();
-    REAL get_var(fwd_ptr&);
+    REAL get_var(fwd_ptr);
 
 private:
     LP *lp;
@@ -122,16 +122,16 @@ public:
 
     unsigned char remove_col( fwd_ptr );
 
-    unsigned char set_obj_num(fwd_ptr& ptr, REAL &);
-    unsigned char set_obj_denom(fwd_ptr& ptr, REAL &);
-    unsigned char set_obj_num_constant(REAL &);
-    unsigned char set_obj_denom_constant(REAL &);
-    unsigned char set_col_name (fwd_ptr&, char *);
+    unsigned char set_obj_num(fwd_ptr ptr, REAL );
+    unsigned char set_obj_denom(fwd_ptr ptr, REAL );
+    unsigned char set_obj_num_constant(REAL );
+    unsigned char set_obj_denom_constant(REAL );
+    unsigned char set_col_name (fwd_ptr, char *);
 
     unsigned char solve();
 
     REAL get_obj();
-    REAL get_var(fwd_ptr&);
+    REAL get_var(fwd_ptr);
     
 private:
     FracLP *lp;
