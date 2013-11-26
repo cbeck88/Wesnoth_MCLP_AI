@@ -64,13 +64,14 @@ typedef std::list<int>::iterator fwd_ptr;
 
 class damageLP {
 public:
-    damageLP():lp(NULL),slotMap(), unitMap(), Ncol(0),cols(){} //defenderMap()
+    damageLP():lp(NULL),slotMap(), unitMap(), defenderMap(), Ncol(0),cols(){}
     ~damageLP() { if (lp != NULL) { delete(lp); } }
 
     void insert( map_location src, map_location dst, map_location def);
     void make_lp();
     void remove_slot(map_location dst);
     void remove_unit(map_location unit);
+    //including remove_defender makes no sense, you would have to update the new moves that are possible.
 
     fwd_ptr begin() {return cols.begin(); }
     fwd_ptr end() {return cols.end(); }
@@ -94,7 +95,7 @@ private:
     //Each attacker destination "slot", and each attacker, becomes a row in LP since each unit and slot can be used only once.
     std::multimap<const map_location, col_ptr> slotMap; 
     std::multimap<const map_location, col_ptr> unitMap;
-    //std::multimap<map_location, col_ptr> defenderMap; // No use atm
+    std::multimap<map_location, col_ptr> defenderMap; // No real use atm but may be useful for updates later.
 
     int Ncol;
 

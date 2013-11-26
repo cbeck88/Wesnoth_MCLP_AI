@@ -197,6 +197,8 @@ wesnoth_sources = Split("""
     ai/game_info.cpp
     ai/gamestate_observer.cpp
     ai/interface.cpp
+    ai/lp/lp.cpp
+    ai/lp/helper.cpp
     ai/lp/ai.cpp
     ai/lua/core.cpp
     ai/lua/lua_object.cpp

@@ -50,245 +50,8 @@ typedef move_map::const_iterator Itor;
 typedef std::multimap<map_location,int>::iterator locItor;
 
 //*************************************************************
-// Implementation of LP wrappers
-//*************************************************************
-
-void damageLP::insert( const map_location src, const map_location dst, map_location target)
-{
-    if (lp != NULL) {
-       ERR_AI << "ERROR: Tried to insert to a damageLP after makelp." << std::endl;
-       return;
-    }
-    col_ptr ptr = cols.insert(cols.end(),++Ncol);
-    slotMap.insert(std::make_pair<const map_location,col_ptr> (dst, ptr));
-    unitMap.insert(std::make_pair<const map_location,col_ptr> (src, ptr)); 
-    //defenderMap.insert(std::make_pair<map_location,col_ptr> (target, ptr)); 
-}
-
-void ctkLP::insert(map_location src, map_location dst)
-{
-    if (lp != NULL) {
-       ERR_AI << "ERROR: Tried to insert to a ctkLP after makelp." << std::endl;
-       return;
-    }
-    col_ptr ptr = cols.insert(cols.end(),++Ncol);
-    slotMap.insert(std::make_pair<const map_location,col_ptr> (dst, ptr));
-    unitMap.insert(std::make_pair<const map_location,col_ptr> (src, ptr)); 
-}
-
-#define remove_X(X) remove_ ## X (const map_location loc)                                                           \
-{                                                                                                                   \
-    std::pair<std::multimap<const map_location, col_ptr>::iterator,std::multimap<const map_location, col_ptr>::iterator> range; \
-    int temp;                                                                                                       \
-    std::priority_queue<int> to_die;                                                                                \
-    for (range = X ## Map.equal_range(loc); range.first != range.second; ++range.first)                             \
-    {                                                                                                               \
-        temp = *(range.second->second);                                                                             \
-        assert(0 < temp);                                                                                           \
-        assert(temp <= Ncol);                                                                                       \
-        to_die.push(temp);                                                                                          \
-    }                                                                                                               \
-    while (!to_die.empty())                                                                                         \
-    {                                                                                                               \
-        lp->delete_col(to_die.top());                                                                               \
-        to_die.pop();                                                                                               \
-        Ncol--;                                                                                                     \
-    }                                                                                                               \
-    temp = 0;                                                                                                       \
-    for (col_ptr ptr = cols.begin(); ptr != cols.end(); ++ptr)                                                      \
-    {                                                                                                               \
-        (*ptr)=++temp;                                                                                              \
-    }                                                                                                               \
-    assert(Ncol == temp);                                                                                           \
-}
-    //If the return of equal range were guaranteed to be sorted wrt value we could use this:                        
-    //But according to standard we cannot so we throw in a heap first ><
-    //
-    //for (range = slotMap.equal_range(dst); range.second != range.first; --range.second)
-    //{
-    //    temp = *(range.second->second);
-    //    assert(0 < temp);
-    //    assert(temp <= Ncol);
-    //    LP->delete_col(temp);
-    //    Ncol--;
-    //}
-
-void damageLP::remove_X(slot)
-void damageLP::remove_X(unit)
-void ctkLP::remove_X(slot)
-void ctkLP::remove_X(unit)
-
-unsigned char damageLP::remove_col(fwd_ptr ptr)
-{
-    unsigned char ret;
-    ret = lp->delete_col(*ptr);
-    fwd_ptr temp = cols.erase(ptr);
-    while (temp != cols.end())
-    {
-        (*temp)--;
-        ++temp;
-    }
-    Ncol--;
-    return ret;
-}
-
-unsigned char ctkLP::remove_col(fwd_ptr ptr)
-{
-    unsigned char ret;
-    ret = lp->delete_col(*ptr);
-    fwd_ptr temp = cols.erase(ptr);
-    while (temp != cols.end())
-    {
-        (*temp)--;
-        ++temp;
-    }
-    Ncol--;
-    return ret;
-}
-
-void damageLP::make_lp()
-{
-    //LP new_LP(Ncol); //this makes it on the stack... bad I think
-    //lp = & new_LP;
-    lp = new LP(Ncol);
-
-    lp->rows_LE_1(&slotMap);
-    DBG_AI << "added slot constraints" << std::endl;
-    lp->rows_LE_1(&unitMap);
-    DBG_AI << "added unit constraints" << std::endl;
-
-    //bool_ptr = cols.begin();
-}
-
-void ctkLP::make_lp()
-{
-    //FracLP new_LP(Ncol); //this make it on the stack... bad I think
-    //lp = & new_LP;
-    lp = new FracLP(Ncol);
-
-    lp->rows_LE_1(&slotMap);
-    DBG_AI << "added slot constraints" << std::endl;
-    lp->rows_LE_1(&unitMap);
-    DBG_AI << "added unit constraints" << std::endl;
-
-    //bool_ptr = cols.begin();
-}
-
-unsigned char damageLP::set_obj(fwd_ptr ptr, REAL r)
-{
-    //if (ptr == bool_ptr) { lp->set_boolean(*ptr); bool_ptr++; }
-    return lp->set_obj(*ptr,r);
-}
-
-unsigned char ctkLP::set_obj_num(fwd_ptr ptr, REAL r)
-{
-    //if (ptr == bool_ptr) { lp->set_boolean(*ptr); bool_ptr++; }
-    return lp->set_obj_num(*ptr,r);
-}
-
-unsigned char ctkLP::set_obj_denom(fwd_ptr ptr, REAL r)
-{
-    return lp->set_obj_denom(*ptr,r);
-}
-
-unsigned char ctkLP::set_obj_num_constant(REAL r)
-{
-    DBG_AI << "cktLP::Set num constant " << r << std::endl;
-    return lp->set_obj_num_constant(r);
-}
-
-unsigned char ctkLP::set_obj_denom_constant(REAL r)
-{
-    DBG_AI << "cktLP::Set denom constant " << r << std::endl;
-    return lp->set_obj_denom_constant(r);
-}
-
-unsigned char damageLP::set_col_name(fwd_ptr ptr, char *str)
-{
-    return lp->set_col_name(*ptr,str);
-}
-
-unsigned char ctkLP::set_col_name(fwd_ptr ptr, char *str)
-{
-    return lp->set_col_name(*ptr,str);
-}
-
-unsigned char damageLP::set_boolean(fwd_ptr ptr)
-{
-    return lp->set_boolean(*ptr);
-}
-/*    if (bool_ptr != cols.end())
-    {
-        ERR_AI << "damageLP: Going make to make all vars boolean..." << std::endl;
-        for (bool_ptr = cols.begin(); bool_ptr != cols.end(); bool_ptr++)
-        {
-            lp->set_boolean(*bool_ptr);
-        }
-    }*/
-unsigned char damageLP::solve()
-{
-    return lp->solve();
-}
-
-
-unsigned char ctkLP::set_boolean(fwd_ptr ptr)
-{
-    return lp->set_boolean(*ptr);
-}
-/*    if (bool_ptr != cols.end())
-    {
-        ERR_AI << "ctkLP: Going make to make all vars boolean..." << std::endl;
-        ERR_AI << "ctkLP: WARNING: Some denominator values could be indetermined..." << std::endl;
-        for (bool_ptr = cols.begin(); bool_ptr != cols.end(); bool_ptr++)
-        {
-            lp->set_boolean(*bool_ptr);
-        }
-    }*/
-
-unsigned char ctkLP::solve()
-{
-    return lp->solve();
-}
-
-REAL damageLP::get_obj()
-{
-    return lp->get_obj();
-}
-
-REAL ctkLP::get_obj()
-{
-    return lp->get_obj();
-}
-
-REAL damageLP::get_var(fwd_ptr ptr)
-{
-    return lp->get_var(*ptr);
-}
-
-REAL ctkLP::get_var(fwd_ptr ptr)
-{
-    return lp->get_var(*ptr);
-}
-
-unsigned char damageLP::write_lp(char * file)
-{
-    return lp->write_lp(file);
-}
-
-unsigned char ctkLP::write_lp(char * file)
-{
-    return lp->write_lp(file);
-}
-
-
-//*************************************************************
-// END Implementation of LP wrappers
-//*************************************************************
-
-//*************************************************************
 // Implementation of AI's
 //*************************************************************
-
 
 std::string lp_ai::describe_self() const
 {
@@ -325,13 +88,13 @@ void lp_ai::play_turn()
 	//game_events::fire("ai turn");
         LOG_AI << "lp_ai new turn" << std::endl;
 
-        REAL current_opt = (REAL) -1000000;
-        int* best_moves_list = NULL;
+//        REAL current_opt = (REAL) -1000000;
+//        int* best_moves_list = NULL;
 }
 
 void lp_ai::buildLPs()
 {
-        clock_t c0 = clock();
+//        clock_t c0 = clock();
 
         int Ncol = 0; 
 
@@ -374,7 +137,7 @@ void lp_ai::buildLPs()
                  }
             }
         }
-        clock_t c1 = clock();        
+//        clock_t c1 = clock();        
 }
 
 // ======== Test ai's to visiualize LP output ===========
