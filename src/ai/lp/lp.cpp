@@ -21,7 +21,7 @@ rows_LE_1 (std::multimap<T,int_ptr> *rows)                                      
 void LP::rows_LE_1_BODY
 void FracLP::rows_LE_1_BODY
 
-LP::LP(int n): Ncol(n),lp(NULL)
+LP::LP(int n): Ncol(n),lp(NULL),vars(NULL)
 {
     lp = lp_solve::make_lp(0,n);
     assert(lp != NULL);
@@ -149,7 +149,7 @@ unsigned char LP::solve()
         ERR_AI << "LP::solve() solve gave an error code " << ret << std::endl;
     }
 
-    if (lp_solve::get_ptr_variables(lp,vars) != LP_SOLVE_TRUE) {
+    if (lp_solve::get_ptr_variables(lp,&vars) != LP_SOLVE_TRUE) {
         ERR_AI << "LP::solve() failed to get variables" << std::endl;
     }
     return ret;
@@ -213,7 +213,7 @@ unsigned char FracLP::set_obj_denom_constant(REAL val)
 REAL LP::get_var(int i)
 {
     if (vars == NULL) {ERR_AI << "LP::get_var before solve" << std::endl; return 0;}
-    return (*vars)[i];
+    return vars[i];
 }
 
 REAL FracLP::get_var(int i)

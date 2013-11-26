@@ -60,7 +60,7 @@ public:
 private:
     int Ncol;
     lprec* lp;
-    REAL **vars;
+    REAL *vars;
 };
 
 // FracLP is a wrapper implementing linear fractional programming in terms of linear programming.
