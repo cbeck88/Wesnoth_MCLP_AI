@@ -3,7 +3,7 @@ if [ $# -eq 0 ]; then
     echo -e "\tLoads MCLP ais into .gz save files and launches wesnoth."
     echo -e "\n\tUsage: \n\t\t./aitest scen_code [ai1_type] [ai2_type] [extra]\n"
     echo -e "\tscen_code:     scen_code.gz is a 1.11 savefile in /testsaves/human1.11/, ready to have ai injected."
-    echo -e "\tai_type:       which ai to inject\n\n\t\t-2 = human (no change)\n\t\t-1 = default ai\n\t\t 0 = idle_ai\n\t\t 1 = lp_1_ai\n\t\t 2 = lp_2_ai\n"
+    echo -e "\tai_type:       which ai to inject\n\n\t\t-2 = human (no change)\n\t\t-1 = default ai\n\t\t 0 = idle_ai\n\t\t 1 = lp_1_ai\n\t\t 2 = lp_2_ai\n\t\t 3 = lp_ai\n"
     echo -e "\tPrimary side for this scen is determined /testsaves/conf/scen_code.aiplayer conf file, otherwise is 1.\n"
     echo -e "\tLaunches wesnoth with options --data-dir, --load, --log-debug=ai/mod, plus [extra]'s.\n"
     exit;
@@ -14,7 +14,7 @@ if [ ! -f $SOURCE_FILE ]; then
     echo -e "\tLoads MCLP ais into .gz save files and launches wesnoth."
     echo -e "\n\tUsage: \n\t\t./aitest scen_code [ai1_type] [ai2_type] [extra]\n"
     echo -e "\tscen_code:     scen_code.gz is a 1.11 savefile in /testsaves/human1.11/, ready to have ai injected."
-    echo -e "\tai_type:       which ai to inject\n\n\t\t-2 = human (no change)\n\t\t-1 = default ai\n\t\t 0 = idle_ai\n\t\t 1 = lp_1_ai\n\t\t 2 = lp_2_ai\n"
+    echo -e "\tai_type:       which ai to inject\n\n\t\t-2 = human (no change)\n\t\t-1 = default ai\n\t\t 0 = idle_ai\n\t\t 1 = lp_1_ai\n\t\t 2 = lp_2_ai\n\t\t 3 = lp_ai\n"
     echo -e "\tPrimary side for this scen is determined /testsaves/conf/scen_code.aiplayer conf file, otherwise is 1.\n"
     echo -e "\tLaunches wesnoth with options --data-dir, --load, --log-debug=ai/mod, plus [extra]'s.\n"
     exit;

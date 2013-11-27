@@ -18,12 +18,12 @@
  */
 
 #include "composite/ai.hpp"
-#include "lp/ai.hpp"
 #include "configuration.hpp"
 #include "contexts.hpp"
 #include "default/ai.hpp"
 #include "manager.hpp"
 #include "formula/ai.hpp"
+#include "lp/ai.hpp"
 #include "registry.hpp"
 #include "../game_events/pump.hpp"
 #include "../log.hpp"
@@ -88,6 +88,9 @@ void holder::init( side_number side )
                 }
                 else if (cfg_["ai_algorithm"] == "lp_2_ai") {
                     ai_ = boost::shared_ptr<ai_composite>(new lp_2_ai(*default_ai_context_, cfg_));
+                } 
+                else if (cfg_["ai_algorithm"] == "lp_ai") {
+                    ai_ = boost::shared_ptr<ai_composite>(new lp_ai(*default_ai_context_, cfg_));
                 }
 		else {
                     ai_ = boost::shared_ptr<ai_composite>(new ai_composite(*default_ai_context_,cfg_));
