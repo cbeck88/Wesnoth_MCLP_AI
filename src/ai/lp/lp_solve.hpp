@@ -2,7 +2,7 @@
 #define AI_LP_SOLVE_HPP_INCLUDED
 
 //Enable this to get full MCLP debugging output
-#define MCLP_DEBUG
+//#define MCLP_DEBUG
 
 #ifdef MCLP_DEBUG
 #define LP_SOLVE_LOG_MODE LP_SOLVE_FULL
