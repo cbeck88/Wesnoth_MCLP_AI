@@ -2,21 +2,28 @@
 #define INCLUDE_LP_HPP
 
 #include "lp_solve.hpp"
-#include "../../map_location.hpp"
 #include "../../log.hpp"
-#include <stdio.h>
+#include "assert.h"
+#include <cstdlib>
 
+#include <map>
 #include <list>
-//#include <multimap>
 #include <iterator>
-#include <algorithm>
 
 typedef std::list<int>::iterator int_ptr;
-class map_location;
-typedef const map_location T;
+
+//This produces compiler bugs so we need to use a workaround
+//template<class T> typedef std::multimap< T,int_ptr >::iterator Itor<T>
+template<class T>struct Itor {
+    typedef typename std::multimap<T,int_ptr>::iterator type;
+};
+
+
+//class map_location;
+//typedef const map_location T;
 
 //typedef move_map::const_iterator Itor;
-typedef std::multimap<T,int_ptr>::iterator Map_Itor;
+//typedef std::multimap<T,int_ptr>::iterator Map_Itor;
 
 //sadly, cannot use virtual and templates together ><
 /*
@@ -34,14 +41,29 @@ public:
 
 
 //LP is a wrapper for a linear program with boolean variables and exlclusivity constraints.
+//You can pass it a multimap<T, int_ptr> and it will write linear constraints saying at most
+//one variable pointed to by a ptr associated to any given key can be set to 1.
+
+//FracLP wraps a fractional linear program. See wikipedia linear fractional programming.
+//
+// max c^T * x + \alpha / d^T x + \beta
+// Ax \leq b
+//
+// is equivalent to
+// 
+// max c^T * y + \alpha t
+// Ax \leq bt
+// t \geq 0
+// d^T y + \beta t = 1
+
 class LP /*: public Boolean_Program*/ {
 public:
     LP(int);
     ~LP() { if (lp != NULL) {lp_solve::delete_lp(lp);}}
    
     unsigned char finishRows();
-    unsigned char row_LE_1(Map_Itor,Map_Itor,int);
-    void rows_LE_1 (std::multimap<T,int_ptr> *rowset);
+    template <class T> unsigned char row_LE_1 ( typename Itor<T>::type , typename Itor<T>::type , int);
+    template <class T> void rows_LE_1 ( typename std::multimap< T , int_ptr > *rowset);
     unsigned char set_boolean(int);
     unsigned char delete_col(int);
     int end() {return Ncol;}
@@ -60,18 +82,15 @@ private:
     REAL *vars;
 };
 
-// FracLP is a wrapper implementing linear fractional programming in terms of linear programming.
-// See wikipedia linear fractional programming.
-
 class FracLP /*: public Boolean_Program*/ {
 public:
     FracLP(int n);
-    //~FracLP() { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
-    ~FracLP();
+    ~FracLP() { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
+    //~FracLP();
 
     unsigned char finishRows();
-    unsigned char row_LE_1(Map_Itor,Map_Itor,int);
-    void rows_LE_1 (std::multimap<T,int_ptr> *rowset);
+    template <class T> unsigned char row_LE_1 ( typename Itor<T>::type, typename Itor<T>::type,int);
+    template <class T> void rows_LE_1 ( typename std::multimap< T ,int_ptr> *rowset);
     unsigned char set_boolean(int);
     unsigned char delete_col(int);
     int end() {return Ncol;}
@@ -99,15 +118,83 @@ private:
     bool not_solved_yet; //in this implementation you are not allowed to change denominator entries after calling solve().
 };
 
-//
-// max c^T * x + \alpha / d^T x + \beta
-// Ax \leq b
-//
-// is equivalent to
-// 
-// max c^T * y + \alpha t
-// Ax \leq bt
-// t \geq 0
-// d^T y + \beta t = 1
+//Template Voodoo below
+
+template<class T> unsigned char LP::row_LE_1 (typename Itor<T>::type iter, typename Itor<T>::type end, int cnt)
+{
+    assert(cnt > 0);
+    int j = 1;
+    int *col = (int*) malloc((cnt+1) * sizeof(*col));
+    REAL *row = (REAL*) malloc((cnt+1) * sizeof(*row));
+    unsigned char ret;
+
+    //for each column in iterator, add a 1 in the row for this constraint
+    while (iter != end) {
+        col[j] = *(iter->second);
+        row[j++] = (REAL) 1.0;
+        ++iter;
+    }
+    assert(j==(cnt+1)); // j = 1 + one for every input element, should be cnt + 1
+
+    ret = lp_solve::add_constraintex(lp,j+1,row,col, LP_SOLVE_LE, 1);  //<= 1 constraint in this row, zeros elsewhere
+    //assert(ret);
+    free(col);
+    free(row);
+
+    return(ret);
+}
+
+template<class T> unsigned char FracLP::row_LE_1 ( typename Itor<T>::type iter, typename Itor<T>::type end, int cnt)
+{
+    //DBG_AI << "Row add start: Ncol = " << Ncol << std::endl;
+
+    assert(cnt > 0);
+
+    //cnt++; cnt++// +2, need to include a spot for t variable, and be 1 based
+        
+    #define BASE_ARRAYS_FROM 0
+    int j = BASE_ARRAYS_FROM;//1;
+    int *col = (int*) malloc((cnt+2) * sizeof(*col));
+    REAL *row = (REAL*) malloc((cnt+2) * sizeof(*row));
+    unsigned char ret;
+                
+    //for each entry in this range, add a 1 in the row for this constraint, at the column specified at value
+    while (iter != end) {
+        col[j] = *(iter->second);
+        row[j++] = (REAL) 1.0;
+        //DBG_AI << "col[" << j-1 << "] = " << col[j-1] << "\trow[" << j-1 << "] = " << row[j-1] << std::endl;
+        ++iter;
+    }
+    col[j] = Ncol+1;  //add a -1 for t
+    row[j] = (REAL) -1.0; 
+    //DBG_AI << "col[" << j << "] = " << col[j] << "\trow[" << j << "] = " << row[j] << std::endl;
+    assert(j == (cnt+BASE_ARRAYS_FROM)); //j = BASE_ARRAYS_FROM + 1 for every input element, + 1 again, should be cnt + BASE_ARRAYS_FROM
+
+    //DBG_AI << "add(lp," << j+1 << ", row, col <= 0);" << std::endl;
+
+    ret = lp_solve::add_constraintex(lp,j+1,row,col, LP_SOLVE_LE, 0); //The constraint is Ax <= bt
+    //assert(ret);
+    free(col);
+    free(row);
+
+//    DBG_AI << "Row add end: Ncol = " << Ncol << std::endl;
+    return ret;
+}
+
+//This macro, and Itor<T>::type defn, are a hack to get around the fact that templates cannot be used with virtual keyword.
+
+#define rows_LE_1_BODY                                                                                                                 \
+rows_LE_1 (typename std::multimap< T , int_ptr > *rows)                                                                                \
+{                                                                                                                                      \
+    std::pair< typename Itor<T>::type , typename Itor<T>::type > range;                                                                \
+    for (range = rows->equal_range(rows->begin()->first); range.first != range.second; range = rows->equal_range(range.second->first)) \
+    {                                                                                                                                  \
+        row_LE_1 <T> (range.first, range.second, rows->count(range.first->first));                                                     \
+    }                                                                                                                                  \
+}                                              
+ 
+template <class T> void LP::rows_LE_1_BODY
+template <class T> void FracLP::rows_LE_1_BODY
+
 
 #endif

@@ -6,22 +6,6 @@ static lg::log_domain log_ai("ai/general");
 
 REAL FracLP::shortrow[] = {1,-1};
 
-//template <class T>
-//void Boolean_Program::
-
-#define rows_LE_1_BODY                                                                                                                 \
-rows_LE_1 (std::multimap<T,int_ptr> *rows)                                                                                             \
-{                                                                                                                                      \
-    std::pair<Map_Itor, Map_Itor> range;                                                                                               \
-    for (range = rows->equal_range(rows->begin()->first); range.first != range.second; range = rows->equal_range(range.second->first)) \
-    {                                                                                                                                  \
-        row_LE_1(range.first, range.second, rows->count(range.first->first));                                                          \
-    }                                                                                                                                  \
-}                                              
- 
-void LP::rows_LE_1_BODY
-void FracLP::rows_LE_1_BODY
-
 #ifdef MCLP_DEBUG_OVERKILL      
 #define SPAM_GET_LOWBO \
     for (int ZZZ = 1 ; ZZZ <= Ncol+1; ZZZ++) { \
@@ -57,7 +41,6 @@ FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
 
     assert(lp != NULL);
 
-
     DBG_AI << "Just constructed, here's GETLOWBO:" << std::endl;
     SPAM_GET_LOWBO
     //Now add fractional constraint: t >= 0;
@@ -76,11 +59,11 @@ FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
     SPAM_GET_LOWBO
 }
 
-FracLP::~FracLP() {
-#ifdef MCLP_DEBUG
-    DBG_AI << "~FracLP();" << std::endl;
-#endif
-}
+//FracLP::~FracLP() {
+//#ifdef MCLP_DEBUG
+//    DBG_AI << "~FracLP();" << std::endl;
+//#endif
+//}
 
 unsigned char LP::set_col_name(int col, char* str)
 {
@@ -125,69 +108,6 @@ unsigned char FracLP::delete_col(int col)
     return lp_solve::del_column(lp, col);
 }
 
-//template<class T>
-unsigned char LP::row_LE_1(Map_Itor iter, Map_Itor end, int cnt)
-{
-    assert(cnt > 0);
-    int j = 1;
-    int *col = (int*) malloc((cnt+1) * sizeof(*col));
-    REAL *row = (REAL*) malloc((cnt+1) * sizeof(*row));
-    unsigned char ret;
-
-    //for each column in iterator, add a 1 in the row for this constraint
-    while (iter != end) {
-        col[j] = *(iter->second);
-        row[j++] = (REAL) 1.0;
-        ++iter;
-    }
-    assert(j==(cnt+1)); // j = 1 + one for every input element, should be cnt + 1
-
-    ret = lp_solve::add_constraintex(lp,j+1,row,col, LP_SOLVE_LE, 1);  //<= 1 constraint in this row, zeros elsewhere
-    //assert(ret);
-    free(col);
-    free(row);
-
-    return(ret);
-}
-
-//template<class T> 
-unsigned char FracLP::row_LE_1(Map_Itor iter, Map_Itor end, int cnt)
-{
-    DBG_AI << "Row add start: Ncol = " << Ncol << std::endl;
-
-    assert(cnt > 0);
-
-    //cnt++; cnt++// +2, need to include a spot for t variable, and be 1 based
-        
-    #define BASE_ARRAYS_FROM 0
-    int j = BASE_ARRAYS_FROM;//1;
-    int *col = (int*) malloc((cnt+2) * sizeof(*col));
-    REAL *row = (REAL*) malloc((cnt+2) * sizeof(*row));
-    unsigned char ret;
-                
-    //for each entry in this range, add a 1 in the row for this constraint, at the column specified at value
-    while (iter != end) {
-        col[j] = *(iter->second);
-        row[j++] = (REAL) 1.0;
-        DBG_AI << "col[" << j-1 << "] = " << col[j-1] << "\trow[" << j-1 << "] = " << row[j-1] << std::endl;
-        ++iter;
-    }
-    col[j] = Ncol+1;  //add a -1 for t
-    row[j] = (REAL) -1.0; 
-    DBG_AI << "col[" << j << "] = " << col[j] << "\trow[" << j << "] = " << row[j] << std::endl;
-    assert(j == (cnt+BASE_ARRAYS_FROM)); //j = BASE_ARRAYS_FROM + 1 for every input element, + 1 again, should be cnt + BASE_ARRAYS_FROM
-
-    DBG_AI << "add(lp," << j+1 << ", row, col <= 0);" << std::endl;
-
-    ret = lp_solve::add_constraintex(lp,j+1,row,col, LP_SOLVE_LE, 0); //The constraint is Ax <= bt
-    //assert(ret);
-    free(col);
-    free(row);
-
-//    DBG_AI << "Row add end: Ncol = " << Ncol << std::endl;
-    return ret;
-}
-
 unsigned char LP::finishRows()
 {
 #ifdef MCLP_DEBUG
@@ -230,8 +150,10 @@ unsigned char LP::solve()
 
 unsigned char FracLP::finishRows()
 {
+#ifdef MCLP_DEBUG
     DBG_AI << "LP::finishRows(), here's GETLOWBO:" << std::endl;
     SPAM_GET_LOWBO
+#endif
 
     if (lp_solve::set_add_rowmode(lp,LP_SOLVE_FALSE) != LP_SOLVE_TRUE) {
         ERR_AI << "FracLP::finishRows failed to set rowmode to false" << std::endl; 
@@ -242,10 +164,13 @@ unsigned char FracLP::finishRows()
 
 unsigned char FracLP::solve()
 {
+#ifdef MCLP_DEBUG
     DBG_AI << "FracLP::solve()'ing." << std::endl;
+
 //    DBG_AI << "Ncol = " << Ncol << std::endl;
 //    DBG_AI << "here's GETLOWBO:" << std::endl;
     SPAM_GET_LOWBO
+#endif
 
     not_solved_yet = false;
 
@@ -253,12 +178,13 @@ unsigned char FracLP::solve()
     lp_solve::set_lowbo(lp, Ncol+1, (REAL) 0.0);
 #endif
 
-
+#ifdef MCLP_DEBUG
     DBG_AI << "About to commit denom_row:" << std::endl;
     for(int i =1; i <= Ncol+1; i++)
     { 
         DBG_AI << "denom_row["<< i << "]=" << denom_row[i] << std::endl;
     }
+#endif
 
     if (lp_solve::add_constraintex(lp, Ncol+1,denom_row,NULL, LP_SOLVE_EQ, 1) != LP_SOLVE_TRUE) {
         ERR_AI << "FracLP::solve() failed to add denominator constraint" << std::endl; 
@@ -288,8 +214,8 @@ unsigned char FracLP::solve()
     if (lp_solve::get_variables(lp,denom_row) != LP_SOLVE_TRUE) {
         ERR_AI << "FracLP::solve() failed to get variables" << std::endl;
     };
-    DBG_AI << "Done: Ncol = " << Ncol << std::endl;
-    DBG_AI << "LP::solve() done, here's GETLOWBO:" << std::endl;
+//    DBG_AI << "Done: Ncol = " << Ncol << std::endl;
+//    DBG_AI << "LP::solve() done, here's GETLOWBO:" << std::endl;
     SPAM_GET_LOWBO
 
     return ret;
@@ -363,7 +289,7 @@ unsigned char LP::write_lp(char * file)
 
 unsigned char FracLP::write_lp(char * file)
 {
-    DBG_AI << "FracLP::write_lp(), here's GETLOWBO:" << std::endl;
+//    DBG_AI << "FracLP::write_lp(), here's GETLOWBO:" << std::endl;
     SPAM_GET_LOWBO
 
     return lp_solve::write_lp(lp,file);

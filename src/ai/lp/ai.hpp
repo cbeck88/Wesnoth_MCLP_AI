@@ -104,13 +104,11 @@ private:
 
     //Rather than store ints for columns, store pointers to this list so we can delete easily.
     std::list<int> cols;
-
-//    fwd_ptr bool_ptr;
 };
 
 /** A class that manages an LP which estimates opt ctk for a target. **/
 //You must iterate make all insertions before calling make_lp.
-//You must then iterate a forward pointer and set_obj to make all variables boolean.
+//You must then iterate a forward pointer and set_boolean to make all variables boolean.
 //If you fail to do this the class will iterate again before you solve to make sure this happens.
 //Best not to remove anything until after all vars have been made boolean.
 

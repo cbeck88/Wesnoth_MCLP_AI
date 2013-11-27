@@ -175,11 +175,11 @@ void damageLP::make_lp()
     //lp = & new_LP;
     lp.reset(new LP(Ncol));
 
-    lp->rows_LE_1(&slotMap);
+    lp->rows_LE_1<const map_location> (&slotMap);
 #ifdef MCLP_DEBUG
     DBG_AI << "added slot constraints" << std::endl;
 #endif
-    lp->rows_LE_1(&unitMap);
+    lp->rows_LE_1<const map_location>(&unitMap);
 #ifdef MCLP_DEBUG
     DBG_AI << "added unit constraints" << std::endl;
 #endif
@@ -196,11 +196,11 @@ void ctkLP::make_lp()
     //lp = & new_LP;
     lp.reset(new FracLP(Ncol));
 
-    lp->rows_LE_1(&slotMap);
+    lp->rows_LE_1<const map_location>(&slotMap);
 #ifdef MCLP_DEBUG
     DBG_AI << "added slot constraints" << std::endl;
 #endif
-    lp->rows_LE_1(&unitMap);
+    lp->rows_LE_1<const map_location>(&unitMap);
 #ifdef MCLP_DEBUG
     DBG_AI << "added unit constraints" << std::endl;
 #endif

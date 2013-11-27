@@ -178,6 +178,9 @@ void lp_1_ai::play_turn()
 {
         LOG_AI << "lp_1_ai play_turn()" << std::endl;
 
+#ifdef MCLP_DEBUG
+        DBG_AI << "MCLP AI: FULL DEBUG" << std::endl;
+#endif
 	//game_events::fire("ai turn");
         clock_t c0 = clock();
 
@@ -205,8 +208,6 @@ void lp_1_ai::play_turn()
                      while(range.first != range.second) {
                          //columns numbered from 1 in lib lp_solve
                          lp.insert(range.first->second, range.first->first, i->get_location());
-                         //slotMap->insert(std::make_pair<map_location,int> (range.first->first,++Ncol));
-                         //unitMap->insert(std::make_pair<map_location,int> (range.first->second, Ncol)); 
                          DBG_AI << "LP_AI Column:" << ++Ncol << ":" << range.first->second << " -> " << range.first->first << " \\> " << i->get_location() << std::endl;
                          ++range.first;
                      }
@@ -218,7 +219,6 @@ void lp_1_ai::play_turn()
 
         DBG_AI << "made LP" << std::endl;
 
-//        int j=0;
         fwd_ptr j=lp.begin();
         for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
             if(current_team().is_enemy(i->side()) && !i->incapacitated()) {        
@@ -245,7 +245,6 @@ void lp_1_ai::play_turn()
                          combatant attacker(bc_->get_attacker_stats());
                          combatant defender(bc_->get_defender_stats());
                          attacker.fight(defender,false);
-                         //lp_solve::set_binary(lp, ++j, LP_SOLVE_TRUE); //set all variables to binary. columns numbered from 1!
                          lp.set_boolean(j);
                          lp.set_obj(j++, (static_cast<REAL>(i->hitpoints()) - defender.average_hp()) * i->cost() / i->max_hitpoints()); 
                          //value of an attack is the expected gold-adjusted damage inflicted.
@@ -341,6 +340,9 @@ void lp_2_ai::play_turn()
         LOG_AI << "lp_2_ai play_turn()" << std::endl;
 
 #ifdef MCLP_DEBUG
+        DBG_AI << "MCLP AI: FULL DEBUG" << std::endl;
+#endif
+#ifdef MCLP_FILEOUT
         char cstr[40];
         char file_name[20];
         int file_counter = 0;
@@ -375,14 +377,12 @@ void lp_2_ai::play_turn()
         for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
             if(current_team().is_enemy(i->side()) && !i->incapacitated()) {
                  lp.reset(new ctkLP(i->get_location()));
-                 //slotMap = new std::multimap<map_location, int>;
-                 //unitMap = new std::multimap<map_location, int>;
                  Ncol = 0;        
                  c0 = clock();
-
+#ifdef MCLP_DEBUG
                  DBG_AI << "Considering attack on : " << i->get_location() << std::endl;
-                 DBG_AI << "Setting num constant... hit points =" << i->hitpoints() << std::endl;
-
+                 //DBG_AI << "Setting num constant... hit points =" << i->hitpoints() << std::endl;
+#endif
                  //get all ways to attack this unit, so we can set up our LP
                  //we solve a fractional LP, mean damage / variance damage. For well-conditioning we add one to the variance.
                  //
@@ -403,8 +403,6 @@ void lp_2_ai::play_turn()
                  for(size_t n = 0; n != 6; ++n) {
                      range = dstsrc.equal_range(adjacent_tiles[n]);
                      while(range.first != range.second) {
-                         //slotMap->insert(std::make_pair<map_location,int> (range.first->first,++Ncol)); //columns numbered from 1 in lib lp_solve
-                         //unitMap->insert(std::make_pair<map_location,int> (range.first->second, Ncol));
                          lp->insert(range.first->second, range.first->first);
                          DBG_AI << "LP_AI Col:" << ++Ncol << "=" << range.first->second << " -> " << range.first->first << " attack " << i->get_location() << std::endl;
                          ++range.first;
@@ -413,20 +411,28 @@ void lp_2_ai::play_turn()
 
                  if (Ncol > 0) 
                  {
+#ifdef MCLP_DEBUG
                  DBG_AI << "Total Ncol: " << Ncol << std::endl;
+#endif
+
 
                  lp->make_lp();
 
+#ifdef MCLP_DEBUG
                  DBG_AI << "Adding Fractional Constraints. Ncol = " << Ncol << std::endl;
-
                  DBG_AI << "Setting num constant... hit points =" << i->hitpoints() << std::endl;
+#endif
 
                  lp->set_obj_num_constant(-(REAL) i->hitpoints() * 100); // * 100 because CTH is an integer
 
+#ifdef MCLP_DEBUG
                  DBG_AI << "Set denom constant..." << std::endl;
+#endif
                  lp->set_obj_denom_constant((REAL) 1);
 
+#ifdef MCLP_DEBUG
                  DBG_AI << "begin second iteration" << std::endl;
+#endif
                  fwd_ptr j=lp->begin(); //columns numbered from 1
                  for(size_t n = 0; n != 6; ++n) {
                      range = dstsrc.equal_range(adjacent_tiles[n]);
@@ -463,7 +469,7 @@ void lp_2_ai::play_turn()
                          lp->set_obj_denom(j,damage_variance);
                          ++j;
                          ++range.first;
-                         //delete(bc); //todo: put this back
+                         delete(bc); //todo: put this back
                      }
                  }
                  assert(j == lp->end()); 
@@ -482,7 +488,7 @@ void lp_2_ai::play_turn()
                  runtime_diff_ms = ((double)c1 - c0) * 1000. / CLOCKS_PER_SEC;
 
                  LOG_AI << "Done. Took " << runtime_diff_ms << " ms to solve.\n";
-#ifdef MCLP_DEBUG
+#ifdef MCLP_FILEOUT
                  sprintf(file_name, "temp%3u.lp", ++file_counter);
                  LOG_AI << "Here's my LP to attack " << i->get_location() << " in file " << file_name << std::endl;
                  ret = lp->write_lp(file_name); //lp_solve::write_lp(lp, file_name);
@@ -490,19 +496,19 @@ void lp_2_ai::play_turn()
                  if(ret != LP_SOLVE_OPTIMAL)
                  {
                         DBG_AI << "**** NOT OPTIMAL: Code = " << ret << ":"<< lp_solve::SOLVE_CODE(ret) << "****" << std::endl;
-                        //DBG_AI << "Here's my LP in file temp.lp:\n";
-                        //ret = lp_solve::write_lp(lp, "temp.lp");
-                        //DBG_AI << "Here's my data structures:\n" << "Slot Map:\n" << slotMap << std::endl << "Unit Map:\n" << unitMap << std::endl;
                  }
+#ifdef MCLP_DEBUG
                  DBG_AI << "Getting vars..." << std::endl;
+#endif
                  this_opt = lp->get_obj(); //lp_solve::get_objective(lp);
 #ifdef MCLP_DEBUG
                  DBG_AI << "Current Opt = " << current_opt << std::endl;
                  DBG_AI << "This Opt = " << this_opt << std::endl;
 #endif
                  if( this_opt > current_opt ) { //now store the list of best moves and update opt and target
+#ifdef MCLP_DEBUG
                       DBG_AI << "*** Better than best so far" << std::endl;
-
+#endif
                       current_opt = this_opt;
                       best_moves_list.clear(); //best_moves_list = new std::vector<std::pair<map_location, map_location> >();
 
