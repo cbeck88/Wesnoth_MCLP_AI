@@ -1,6 +1,17 @@
 #ifndef AI_LP_SOLVE_HPP_INCLUDED
 #define AI_LP_SOLVE_HPP_INCLUDED
 
+//Enable this to get full MCLP debugging output
+#define MCLP_DEBUG
+
+#ifdef MCLP_DEBUG
+#define LP_SOLVE_LOG_MODE LP_SOLVE_FULL
+#else
+#define LP_SOLVE_LOG_MODE LP_SOLVE_IMPORTANT
+#endif
+
+//#define LP_SET_LOWBO // turn this own to enable set lowbo flags. defaults of >= 0 for all seems fine to me.
+
 //#include <fstream>
 
 #ifndef REAL 
@@ -15,6 +26,7 @@ namespace lp_solve
     {
         lprec* make_lp(int, int);        
         unsigned char set_add_rowmode(lprec*, unsigned char);
+        unsigned char is_add_rowmode(lprec*);
         unsigned char add_constraint(lprec*,REAL*,int, REAL);
         unsigned char add_constraintex(lprec*,int,REAL*,int*, int, REAL);
         unsigned char set_binary(lprec*,int, unsigned char);
@@ -29,11 +41,13 @@ namespace lp_solve
         unsigned char get_variables(lprec*, REAL*);
         unsigned char get_ptr_variables(lprec*, REAL**);
         REAL get_objective(lprec*);
+        REAL get_lowbo(lprec*, int);
         void delete_lp(lprec*);
 
         //unsigned char write_LP(lprec*, FILE*);
         unsigned char write_lp(lprec*, char*);
 
+        const char * SOLVE_CODE (int code);
     }
 }
 //codes for ADD_CONSTRAINT

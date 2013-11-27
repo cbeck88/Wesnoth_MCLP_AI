@@ -17,15 +17,6 @@
 #ifndef AI_LP_AI_HPP_INCLUDED
 #define AI_LP_AI_HPP_INCLUDED
 
-//Uncomment this to get full debugging output
-#define MCLP_DEBUG
-
-#ifdef MCLP_DEBUG
-#define LP_SOLVE_LOG_MODE LP_SOLVE_FULL
-#else
-#define LP_SOLVE_LOG_MODE LP_SOLVE_IMPORTANT
-#endif
-
 #include "lp.hpp"
 #include "../contexts.hpp"
 #include "../interface.hpp"
@@ -34,6 +25,17 @@
 #include <time.h>
 #include <list>
 #include <boost/shared_ptr.hpp>
+
+//Remove this and logs when done debuggins
+//#include "../../log.hpp"
+
+//static lg::log_domain log_ai("ai/general");
+//this in lp.cpp now 
+//#define DBG_AI LOG_STREAM(debug, log_ai)
+//#define LOG_AI LOG_STREAM(info, log_ai)
+//#define WRN_AI LOG_STREAM(warn, log_ai)
+//#define ERR_AI LOG_STREAM(err, log_ai)
+
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -66,7 +68,7 @@ typedef std::list<int>::iterator fwd_ptr;
 class damageLP {
 public:
     damageLP():slotMap(), unitMap(), defenderMap(), Ncol(0),cols(){}
-    //~damageLP() { if (lp) {} else { delete(lp); } }
+    //~damageLP() { DBG_AI << "~damageLP();" << std::endl; } // if (lp != NULL) { delete(lp); } }
 
     void insert( map_location src, map_location dst, map_location def);
     void make_lp();
@@ -115,7 +117,7 @@ private:
 class ctkLP {
 public:
     ctkLP(map_location ml): slotMap(), unitMap(),defender(ml),Ncol(0),cols() {}
-    //~ctkLP() { if (lp) {} else { delete(lp); } }
+    //~ctkLP() { DBG_AI << "~ctkLP();" << std::endl; } //if (lp) {} else { delete(lp); } }
 
     void insert( map_location src, map_location dst);
     void make_lp();
@@ -139,6 +141,7 @@ public:
 
     REAL get_obj();
     REAL get_var(fwd_ptr);
+    bool var_gtr(fwd_ptr, REAL);
 
     unsigned char write_lp (char *);
     

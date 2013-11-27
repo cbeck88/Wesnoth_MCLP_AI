@@ -1,10 +1,6 @@
 #ifndef INCLUDE_LP_HPP
 #define INCLUDE_LP_HPP
 
-#ifndef LP_SOLVE_LOG_MODE 
-#define LP_SOLVE_LOG_MODE LP_SOLVE_IMPORTANT
-#endif
-
 #include "lp_solve.hpp"
 #include "../../map_location.hpp"
 #include "../../log.hpp"
@@ -43,6 +39,7 @@ public:
     LP(int);
     ~LP() { if (lp != NULL) {lp_solve::delete_lp(lp);}}
    
+    unsigned char finishRows();
     unsigned char row_LE_1(Map_Itor,Map_Itor,int);
     void rows_LE_1 (std::multimap<T,int_ptr> *rowset);
     unsigned char set_boolean(int);
@@ -69,8 +66,10 @@ private:
 class FracLP /*: public Boolean_Program*/ {
 public:
     FracLP(int n);
-    ~FracLP() { if (lp != NULL) {lp_solve::delete_lp(lp); free(denom_row);}}
+    //~FracLP() { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
+    ~FracLP();
 
+    unsigned char finishRows();
     unsigned char row_LE_1(Map_Itor,Map_Itor,int);
     void rows_LE_1 (std::multimap<T,int_ptr> *rowset);
     unsigned char set_boolean(int);
@@ -86,6 +85,7 @@ public:
 
     unsigned char set_col_name(int, char*);    
     REAL get_var(int);
+    bool var_gtr(int, REAL);
     REAL get_obj();
 
     unsigned char write_lp(char *);

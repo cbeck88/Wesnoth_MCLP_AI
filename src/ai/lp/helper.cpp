@@ -53,6 +53,9 @@ typedef std::multimap<map_location,int>::iterator locItor;
 
 void damageLP::insert( const map_location src, const map_location dst, map_location target)
 {
+#ifdef MCLP_DEBUG
+    DBG_AI << "damageLP::insert Ncol = " << Ncol << std::endl;
+#endif
     if (lp) {
        ERR_AI << "ERROR: Tried to insert to a damageLP after makelp." << std::endl;
        return;
@@ -65,6 +68,9 @@ void damageLP::insert( const map_location src, const map_location dst, map_locat
 
 void ctkLP::insert(map_location src, map_location dst)
 {
+#ifdef MCLP_DEBUG
+    DBG_AI << "ctkLP::insert Ncol = " << Ncol << std::endl;
+#endif
     if (lp) {
        ERR_AI << "ERROR: Tried to insert to a ctkLP after makelp." << std::endl;
        return;
@@ -120,6 +126,14 @@ unsigned char damageLP::remove_col(fwd_ptr ptr)
 {
     unsigned char ret;
     ret = lp->delete_col(*ptr);
+
+#ifdef MCLP_DEBUG
+    if (ret != LP_SOLVE_TRUE) {
+       ERR_AI << "damageLP: Error removing column: " << *ptr << ". Aborted." << std::endl;
+       return ret;
+    }
+#endif
+    
     fwd_ptr temp = cols.erase(ptr);
     while (temp != cols.end())
     {
@@ -134,6 +148,13 @@ unsigned char ctkLP::remove_col(fwd_ptr ptr)
 {
     unsigned char ret;
     ret = lp->delete_col(*ptr);
+#ifdef MCLP_DEBUG
+    if (ret != LP_SOLVE_TRUE) {
+       ERR_AI << "ctkLP: Error removing column: " << *ptr << ". Aborted." << std::endl;
+       return ret;
+    }
+#endif
+
     fwd_ptr temp = cols.erase(ptr);
     while (temp != cols.end())
     {
@@ -146,29 +167,44 @@ unsigned char ctkLP::remove_col(fwd_ptr ptr)
 
 void damageLP::make_lp()
 {
+#ifdef MCLP_DEBUG
+    DBG_AI << "damageLP::make_lp Ncol = " << Ncol << std::endl;
+#endif
+
     //LP new_LP(Ncol); //this makes it on the stack... bad I think
     //lp = & new_LP;
     lp.reset(new LP(Ncol));
 
     lp->rows_LE_1(&slotMap);
+#ifdef MCLP_DEBUG
     DBG_AI << "added slot constraints" << std::endl;
+#endif
     lp->rows_LE_1(&unitMap);
+#ifdef MCLP_DEBUG
     DBG_AI << "added unit constraints" << std::endl;
-
+#endif
+    lp->finishRows(); // this will be slow but doing it for now.
     //bool_ptr = cols.begin();
 }
 
 void ctkLP::make_lp()
 {
+#ifdef MCLP_DEBUG
+    DBG_AI << "ctkLP::make_lp Ncol = " << Ncol << std::endl;
+#endif
     //FracLP new_LP(Ncol); //this make it on the stack... bad I think
     //lp = & new_LP;
     lp.reset(new FracLP(Ncol));
 
     lp->rows_LE_1(&slotMap);
+#ifdef MCLP_DEBUG
     DBG_AI << "added slot constraints" << std::endl;
+#endif
     lp->rows_LE_1(&unitMap);
+#ifdef MCLP_DEBUG
     DBG_AI << "added unit constraints" << std::endl;
-
+#endif
+    lp->finishRows(); // this will be slow but doing it for now.
     //bool_ptr = cols.begin();
 }
 
@@ -191,13 +227,17 @@ unsigned char ctkLP::set_obj_denom(fwd_ptr ptr, REAL r)
 
 unsigned char ctkLP::set_obj_num_constant(REAL r)
 {
+#ifdef MCLP_DEBUG
     DBG_AI << "cktLP::Set num constant " << r << std::endl;
+#endif
     return lp->set_obj_num_constant(r);
 }
 
 unsigned char ctkLP::set_obj_denom_constant(REAL r)
 {
+#ifdef MCLP_DEBUG
     DBG_AI << "cktLP::Set denom constant " << r << std::endl;
+#endif
     return lp->set_obj_denom_constant(r);
 }
 
@@ -266,6 +306,11 @@ REAL damageLP::get_var(fwd_ptr ptr)
 REAL ctkLP::get_var(fwd_ptr ptr)
 {
     return lp->get_var(*ptr);
+}
+
+bool ctkLP::var_gtr(fwd_ptr ptr, REAL eps)
+{
+    return lp->var_gtr(*ptr, eps);
 }
 
 unsigned char damageLP::write_lp(char * file)
