@@ -54,6 +54,8 @@ typedef std::multimap<map_location,int>::iterator locItor;
 // Implementation of AI's
 //*************************************************************
 
+lp_ai::lp_ai(default_ai_context &context, const config& cfg):ai_composite(context, cfg), ctk_lps() { }
+
 std::string lp_ai::describe_self() const
 {
 	return "[lp_ai]";
@@ -89,26 +91,75 @@ void lp_ai::play_turn()
 	//game_events::fire("ai turn");
         LOG_AI << "lp_ai new turn" << std::endl;
 
-//        REAL current_opt = (REAL) -1000000;
-//        int* best_moves_list = NULL;
+        clock_t c0 = clock();
+        std::map<const map_location, ctk_pod >::iterator k;
+
+        map_location adjacent_tiles[6];
+        std::pair<Itor,Itor> range;
+
+        REAL current_opt = (REAL) -1000000;
+        REAL this_opt;
+        map_location best_target;
+        std::map< const map_location, ctk_pod >::iterator best;
+
+        fwd_ptr j;
+       
+        for (k = ctk_lps.begin(); k != ctk_lps.end(); ++k) {
+            this_opt = k->second.first->get_obj();
+            if (this_opt > current_opt) {
+                best = k;
+                current_opt = this_opt;
+            }
+        }
+                
+        j = best->second.first->begin();
+        best_target = *(best->second.first->defender);
+        DBG_AI << "New Best Moves List:" << std::endl;
+        for(size_t n = 0; n != 6; ++n) {
+            range = dstsrc.equal_range(adjacent_tiles[n]);
+            while(range.first != range.second) {
+                const map_location& dst = range.first->first;
+                const map_location& src = range.first->second;         
+                //y = xt, so divide by t which is in row[Ncol]. if this is > 0 then move.
+                DBG_AI << "Value" << (REAL)(k->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target; 
+
+                if (best->second.first->var_gtr(j,.1)) {//((row[j++]/row[Ncol]) > .01) { 
+                    execute_move_action(src, dst); //best_moves_list.push_back(std::make_pair<map_location, map_location> (src, dst));
+                    DBG_AI << "**"; //src << " -> " << dst << " \\> " << i->get_location() << std::endl; 
+                }//{execute_move_action(src, dst, false, true);}
+                DBG_AI << std::endl;
+                ++range.first;
+                ++j;
+            }
+            DBG_AI << "End of list." << std::endl;
+        }        
+        clock_t c1 = clock();        
+        double runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
+        DBG_AI << "Finish lp_ai::play_turn(), took "<< runtime_diff_ms << " ms." << std::endl;
+
 }
 
 void lp_ai::buildLPs()
 {
-//        clock_t c0 = clock();
+        DBG_AI << "lp_ai::buildLPs();" <<std::endl;
+#ifdef MCLP_FILEOUT
+        char cstr[40];
+        char file_name[20];
+        int file_counter = -1; //damage lp is 0
+#endif
+        clock_t c0 = clock();
 
         int Ncol = 0; 
 
-#ifdef MCLP_DEBUG
-        file_counter = 0;
-#endif
         ctk_lps.clear();
-        ctkLP current_target(map_location::null_location);
+        boost::shared_ptr<ctkLP> current_target;
+        //ctkLP current_target(map_location::null_location);
         bool haveTarget = false;
-        damageLP dmg_lp_new;
-        dmg_lp = & dmg_lp_new;
+        dmg_lp = boost::shared_ptr<damageLP> (new damageLP());
+        //dmg_lp = & dmg_lp_new;
 
         std::map<map_location,pathfind::paths> possible_moves;
+
         calculate_possible_moves(possible_moves,srcdst,dstsrc,false);
 
 	unit_map& units_ = *resources::units;
@@ -128,26 +179,118 @@ void lp_ai::buildLPs()
                          DBG_AI << "LP_AI:" << Ncol << ":" << range.first->second << " -> " << range.first->first << " \\> " << i->get_location() << std::endl;
                          dmg_lp->insert(range.first->second,range.first->first,i->get_location());
                          if (!haveTarget) {
-                             ctkLP current_target(i->get_location());
-                             ctk_lps.insert(std::make_pair(i->get_location(), & current_target));
+                             current_target.reset(new ctkLP(i->get_location()));
+                             current_target->set_obj_num_constant(-(REAL) i->hitpoints() * 100); // * 100 because CTH is an integer
+                             current_target->set_obj_denom_constant((REAL) 1);
+
+                             ctk_lps.insert(std::make_pair(i->get_location(), std::make_pair(boost::shared_ptr<ctkLP>(current_target), current_target->begin())));
                              haveTarget = true;
                          }
-                         current_target.insert(range.first->second, range.first->first);
+                         current_target->insert(range.first->second, range.first->first);
                          ++range.first;
                      }
                  }
             }
         }
-//        clock_t c1 = clock();        
+
+        //now make pointers to iterate for the ctk_lps.
+        dmg_lp->make_lp();
+
+        std::map<const map_location, ctk_pod >::iterator k;
+        for(k = ctk_lps.begin(); k != ctk_lps.end(); ++k)
+        {
+            k->second.first->make_lp();
+        }
+        fwd_ptr j=dmg_lp->begin();
+
+        for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
+            if(current_team().is_enemy(i->side()) && !i->incapacitated()) {        
+                 k = ctk_lps.find(i->get_location());
+                 
+                 get_adjacent_tiles(i->get_location(),adjacent_tiles);
+                 for(size_t n = 0; n != 6; ++n) {
+                     range = dstsrc.equal_range(adjacent_tiles[n]);
+                     //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
+                     while(range.first != range.second) {
+                         const map_location& dst = range.first->first;
+                         const map_location& src = range.first->second;
+                         //these are dst and src for the attacking unit
+                         const unit_map::const_iterator un = units_.find(src);
+                         assert(un != units_.end());
+
+#ifdef MCLP_FILEOUT
+                         std::stringstream s1,s2,s3;
+                         s1 << src; s2 << dst; s3 << i->get_location();
+                         sprintf(cstr, "(%s->%s\\>%s)", s1.str().c_str(), s2.str().c_str(), s3.str().c_str());
+                         dmg_lp->set_col_name(j, cstr);//lp_solve::set_col_name(lp, j, cstr);
+                         k->second.first->set_col_name(k->second.second, cstr);
+#endif
+
+                         //const int chance_to_hit = un->second.defense_modifier(get_info().map,terrain);
+                         //This code modified from attack::perform() in attack.cpp
+                         /*  battle_context(const unit_map &units,
+					               const map_location& attacker_loc, const map_location& defender_loc,
+					               int attacker_weapon = -1, int defender_weapon = -1,
+					               double aggression = 0.0, const combatant *prev_def = NULL,
+					               const unit* attacker_ptr=NULL);
+                              */
+                         battle_context *bc_ = new battle_context(units_, dst, i->get_location(), -1, -1, 0.0, NULL, &(*un));
+                         const battle_context_unit_stats a = bc_->get_attacker_stats();
+
+                         //This code later in attack::perform() in attack.cpp
+                         combatant attacker(bc_->get_attacker_stats());
+                         combatant defender(bc_->get_defender_stats());
+                         attacker.fight(defender,false);
+ 
+                         dmg_lp->set_boolean(j);
+                         dmg_lp->set_obj(j++, (static_cast<REAL>(i->hitpoints()) - defender.average_hp()) * i->cost() / i->max_hitpoints()); 
+
+                         const REAL damage_expected = (static_cast<REAL>(a.damage)) * a.chance_to_hit * a.num_blows;
+                         const REAL damage_variance = (static_cast<REAL>(a.damage)) * a.damage * a.chance_to_hit * a.num_blows;
+
+                         k->second.first->set_boolean(k->second.second);
+                         k->second.first->set_obj_num(k->second.second,damage_expected);
+                         k->second.first->set_obj_denom(k->second.second++,damage_variance);
+
+                         //value of an attack is the expected gold-adjusted damage inflicted
+                         ++range.first;
+                         delete(bc_);
+                     }
+                 }
+            }
+        }
+
+        clock_t c1 = clock();        
+        double runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
+        DBG_AI << "Finished creating LPs. Took " << runtime_diff_ms << " ms. " << std::endl;
+
+        c0 = clock();
+
+        dmg_lp->solve();
+#ifdef MCLP_FILEOUT
+                 sprintf(file_name, "temp%3u.lp", ++file_counter);
+                 LOG_AI << "Here's my damageLP in file " << file_name << std::endl;
+                 ret = dmg_lp->write_lp(file_name); //lp_solve::write_lp(lp, file_name);
+#endif
+
+        for (k = ctk_lps.begin(); k != ctk_lps.end(); ++k)
+        {
+            k->second.first->solve();
+#ifdef MCLP_FILEOUT
+                 sprintf(file_name, "temp%3u.lp", ++file_counter);
+                 LOG_AI << "Here's my LP to attack " << (*(k->second.first->defender)) << " in file " << file_name << std::endl;
+                 ret = k->second.first->write_lp(file_name); //lp_solve::write_lp(lp, file_name);
+#endif
+        }
+
+        c1 = clock();        
+        runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
+        DBG_AI << "Finished solving LPs. Took " << runtime_diff_ms << " ms. " << std::endl;
 }
 
 // ======== Test ai's to visiualize LP output ===========
 
-//lp_1_ai::lp_1_ai(default_ai_context &context, const config& /*cfg*/)
-//{
-//        LOG_AI << "lp_1_constructed" << std::endl;
-//}
-
+lp_1_ai::lp_1_ai(default_ai_context &context, const config& cfg):ai_composite(context, cfg) { }
 
 std::string lp_1_ai::describe_self() const
 {
@@ -309,6 +452,8 @@ void lp_1_ai::play_turn()
 //        LOG_AI << "lp_2_constructed" << std::endl;
 //	init_default_ai_context_proxy(context);
 //}
+
+lp_2_ai::lp_2_ai(default_ai_context &context, const config& cfg):ai_composite(context, cfg) { }
 
 std::string lp_2_ai::describe_self() const
 {

@@ -56,7 +56,7 @@ typedef std::multimap<map_location,int>::iterator locItor;
 //*************************************************************
 
 damageLP::damageLP():slotMap(), unitMap(), defenderMap(), Ncol(0),cols() {}
-ctkLP::ctkLP(map_location ml): slotMap(), unitMap(),defender(& ml),Ncol(0),cols() {}
+ctkLP::ctkLP(map_location ml): slotMap(), unitMap(),defender(& ml),Ncol(0),cols(),made(false), holdingnum(false), holdingdenom(false) {}
 
 void damageLP::insert( const map_location src, const map_location dst, map_location target)
 {
@@ -199,9 +199,13 @@ void ctkLP::make_lp()
 #ifdef MCLP_DEBUG
     DBG_AI << "ctkLP::make_lp Ncol = " << Ncol << std::endl;
 #endif
+    made = true;
     //FracLP new_LP(Ncol); //this make it on the stack... bad I think
     //lp = & new_LP;
     lp.reset(new FracLP(Ncol));
+
+    if (holdingnum) {lp->set_obj_num_constant(holding_num); holdingnum = false; DBG_AI << "Added held num value.." << std::endl;}
+    if (holdingdenom) {lp->set_obj_denom_constant(holding_denom); holdingdenom = false; DBG_AI << "Added held denom value.." << std::endl;}
 
     lp->rows_LE_1<const map_location>(&slotMap);
 #ifdef MCLP_DEBUG
@@ -234,18 +238,32 @@ unsigned char ctkLP::set_obj_denom(fwd_ptr ptr, REAL r)
 
 unsigned char ctkLP::set_obj_num_constant(REAL r)
 {
+    if (made) {
 #ifdef MCLP_DEBUG
     DBG_AI << "cktLP::Set num constant " << r << std::endl;
 #endif
     return lp->set_obj_num_constant(r);
+    } else {
+        DBG_AI << "Now holding num = " << r << std::endl;
+        holdingnum = true;
+        holding_num = r;
+        return LP_SOLVE_TRUE;
+    }
 }
 
 unsigned char ctkLP::set_obj_denom_constant(REAL r)
 {
+    if (made) {
 #ifdef MCLP_DEBUG
     DBG_AI << "cktLP::Set denom constant " << r << std::endl;
 #endif
     return lp->set_obj_denom_constant(r);
+    } else {
+        DBG_AI << "Now holding denom = " << r << std::endl;
+        holdingdenom = true;
+        holding_denom = r;
+        return LP_SOLVE_TRUE;
+    }
 }
 
 unsigned char damageLP::set_col_name(fwd_ptr ptr, char *str)

@@ -55,6 +55,8 @@ public:
 
     unsigned char write_lp (char *);
 
+    typedef fwd_ptr iterator;
+
 private:
     boost::shared_ptr<LP> lp;
 
@@ -106,19 +108,27 @@ public:
 
     unsigned char write_lp (char *);
     
+    typedef fwd_ptr iterator;
+    map_location * defender; //This was private but i make it public now for debugging output
+
+
 private:
     boost::shared_ptr<FracLP> lp;
 
     //Each attacker destination "slot", and each attacker, becomes a row in LP since each unit and slot can be used only once.
     std::multimap<const map_location, col_ptr> slotMap;
     std::multimap<const map_location, col_ptr> unitMap;
-    map_location * defender;
 
     int Ncol;
 
     //Rather than store ints for columns, store pointers to this forward list so we can delete easily.
     std::list<int> cols;
 
+    REAL holding_num;
+    REAL holding_denom;
+    bool made;
+    bool holdingnum;
+    bool holdingdenom;
 //    fwd_ptr bool_ptr;
 };
 

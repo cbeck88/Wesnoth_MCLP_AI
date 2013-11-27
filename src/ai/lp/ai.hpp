@@ -23,6 +23,8 @@
 #include "../interface.hpp"
 #include "../composite/ai.hpp"
 
+#include <boost/shared_ptr.hpp>
+
 #ifndef REAL 
    #define REAL double
 #endif
@@ -59,7 +61,7 @@ namespace ai {
 
 class lp_ai : public ai_composite {
 public:
-        lp_ai(default_ai_context &context, const config& cfg):ai_composite(context, cfg), temp_lp(NULL), ctk_lps(), dmg_lp(NULL) { }
+        lp_ai(default_ai_context &context, const config& cfg); //:ai_composite(context, cfg), temp_lp(NULL), ctk_lps(), dmg_lp(NULL) { }
 
         void new_turn();
         void play_turn();
@@ -70,19 +72,12 @@ public:
 	virtual config to_config() const;
 
 private:
-        clock_t c_0;
+        boost::shared_ptr<ctkLP> temp_lp;
+        typedef std::pair< boost::shared_ptr<ctkLP> , ctkLP::iterator  > ctk_pod;
+        std::map<const map_location, ctk_pod > ctk_lps;
+        boost::shared_ptr<damageLP> dmg_lp;
 
-        //std::map<map_location,pathfind::paths> possible_moves;
         move_map srcdst, dstsrc;
-
-#ifdef MCLP_DEBUG
-        char cstr[40];
-        char file_name[20];
-        int file_counter;
-#endif
-        ctkLP* temp_lp;
-        std::map<const map_location, ctkLP*> ctk_lps;
-        damageLP *dmg_lp;
 
         void buildLPs();
 };
@@ -93,7 +88,7 @@ class lp_1_ai : public ai_composite {
 public:
 //        lp_1_ai(readwrite_context &context, const config &cfg);
 //        lp_1_ai(default_ai_context &context, const config &cfg);
-        lp_1_ai(default_ai_context &context, const config& cfg):ai_composite(context, cfg) { }
+        lp_1_ai(default_ai_context &context, const config& cfg);//:ai_composite(context, cfg) { }
 //        lp_1_ai(const lp_1_ai &ai);
 
         void new_turn();
@@ -112,7 +107,7 @@ class lp_2_ai : public ai_composite {
 public:
 //        lp_2_ai(readwrite_context &context, const config &cfg);
 //        lp_2_ai(default_ai_context &context, const config &cfg);
-        lp_2_ai(default_ai_context &context, const config& cfg):ai_composite(context, cfg) { }
+        lp_2_ai(default_ai_context &context, const config& cfg);//:ai_composite(context, cfg) { }
 //        lp_2_ai(const lp_2_ai &ai);
 
         void new_turn();
