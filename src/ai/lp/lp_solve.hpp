@@ -1,11 +1,7 @@
 #ifndef AI_LP_SOLVE_HPP_INCLUDED
 #define AI_LP_SOLVE_HPP_INCLUDED
 
-//Enable this to save lp files from MCLP for debugging
-//#define MCLP_FILEOUT
-
-//Enable this to get full MCLP debugging output
-//#define MCLP_DEBUG
+#include "MCLP_FLAGS.hpp"
 
 #ifdef MCLP_DEBUG
 #define LP_SOLVE_LOG_MODE LP_SOLVE_FULL

@@ -10,6 +10,10 @@
 #include <list>
 #include <iterator>
 
+#ifndef REAL 
+   #define REAL double
+#endif
+
 typedef std::list<int>::iterator int_ptr;
 
 //This produces compiler bugs so we need to use a workaround
@@ -85,7 +89,7 @@ private:
 class FracLP /*: public Boolean_Program*/ {
 public:
     FracLP(int n);
-    ~FracLP() { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
+    ~FracLP(); // { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
     //~FracLP();
 
     unsigned char finishRows();
@@ -196,5 +200,6 @@ rows_LE_1 (typename std::multimap< T , int_ptr > *rows)                         
 template <class T> void LP::rows_LE_1_BODY
 template <class T> void FracLP::rows_LE_1_BODY
 
-
 #endif
+
+

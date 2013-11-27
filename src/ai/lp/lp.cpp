@@ -1,4 +1,5 @@
 #include "lp.hpp"
+#include "lp_solve.hpp"
 
 static lg::log_domain log_ai("ai/general");
 #define ERR_AI LOG_STREAM(err, log_ai)
@@ -58,6 +59,8 @@ FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
     DBG_AI << "set Ncol+1" << (Ncol+1) << ", here's GETLOWBO:" << std::endl;
     SPAM_GET_LOWBO
 }
+
+FracLP::~FracLP() { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
 
 //FracLP::~FracLP() {
 //#ifdef MCLP_DEBUG

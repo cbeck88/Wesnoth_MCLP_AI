@@ -4,6 +4,7 @@
  */
 
 #include "ai.hpp"
+#include "lp_solve.hpp"
 
 #include "../actions.hpp"
 #include "../game_info.hpp"
@@ -11,22 +12,23 @@
 
 #include "../../attack_prediction.hpp"
 #include "../../actions/attack.hpp"
-#include "../../dialogs.hpp"
-#include "../../game_events/pump.hpp"
+//#include "../../dialogs.hpp"
+//#include "../../game_events/pump.hpp"
 #include "../../gamestatus.hpp"
 #include "../../log.hpp"
 #include "../../map_location.hpp"
-#include "../../mouse_handler_base.hpp"
+//#include "../../mouse_handler_base.hpp"
 #include "../../resources.hpp"
-#include "../../terrain_filter.hpp"
+//#include "../../terrain_filter.hpp"
 #include "../../unit_display.hpp"
 #include "../../wml_exception.hpp"
-//#include "../../pathfind/pathfind.hpp"
+#include "../../pathfind/pathfind.hpp"
+//#include "../../unit_map.hpp"
 
 #include <stdio.h>
-#include <boost/foreach.hpp>
+//#include <boost/foreach.hpp>
 
-#include <queue>
+//#include <queue>
 #include <iterator>
 #include <algorithm>
 

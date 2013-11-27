@@ -3,7 +3,11 @@
  * Artificial intelligence - The computer commands the enemy.
  */
 
-#include "ai.hpp"
+
+#include "helper.hpp"
+#include "lp.hpp"
+
+//#include "ai.hpp"
 //#include "lp_solve.hpp"
 
 #include "../game_info.hpp"
@@ -50,6 +54,9 @@ typedef std::multimap<map_location,int>::iterator locItor;
 //*************************************************************
 // Implementation of LP wrappers
 //*************************************************************
+
+damageLP::damageLP():slotMap(), unitMap(), defenderMap(), Ncol(0),cols() {}
+ctkLP::ctkLP(map_location ml): slotMap(), unitMap(),defender(& ml),Ncol(0),cols() {}
 
 void damageLP::insert( const map_location src, const map_location dst, map_location target)
 {
