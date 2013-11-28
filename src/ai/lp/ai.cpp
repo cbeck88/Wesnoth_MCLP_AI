@@ -5,6 +5,7 @@
 
 #include "ai.hpp"
 #include "lp_solve.hpp"
+//#include "MCLP_FLAGS.hpp"
 
 #include "../actions.hpp"
 #include "../game_info.hpp"
@@ -89,10 +90,9 @@ void lp_ai::switch_side(side_number side)
 void lp_ai::play_turn()
 {
 	//game_events::fire("ai turn");
-        LOG_AI << "lp_ai new turn" << std::endl;
+        LOG_AI << "lp_ai new turn. have " << ctk_lps.size() << " ctk LPs." << std::endl;
 
         clock_t c0 = clock();
-        std::map<const map_location, ctk_pod >::iterator k;
 
         map_location adjacent_tiles[6];
         std::pair<Itor,Itor> range;
@@ -100,39 +100,63 @@ void lp_ai::play_turn()
         REAL current_opt = (REAL) -1000000;
         REAL this_opt;
         map_location best_target;
-        std::map< const map_location, ctk_pod >::iterator best;
+        std::map< const map_location, ctk_pod >::iterator best = ctk_lps.begin();
 
         fwd_ptr j;
+        std::map<const map_location, ctk_pod >::iterator k;
        
         for (k = ctk_lps.begin(); k != ctk_lps.end(); ++k) {
+#ifdef MCLP_DEBUG
+            DBG_AI << "Got a ctk_lp. MCLP_DEBUG ON" << std::endl;
+#else
+            DBG_AI << "Got a ctk_lp. MCLP_DEBUG OFF" << std::endl;
+#endif    
             this_opt = k->second.first->get_obj();
+//#ifdef MCLP_DEBUG
+            DBG_AI << "Current Opt = " << current_opt << std::endl;
+            DBG_AI << "This Opt = " << this_opt << std::endl;
+//#endif
             if (this_opt > current_opt) {
-                best = k;
-                current_opt = this_opt;
+//#ifdef MCLP_DEBUG
+                 DBG_AI << "Found new best attack! :" << k->second.first->defender << std::endl;
+//#endif
+                 best = k;
+                 current_opt = this_opt;
+
+                 DBG_AI << "Reality check: best defender = " << best->second.first->defender << " , value = " << best->second.first->get_obj() << std::endl;
             }
+//#ifdef MCLP_DEBUG
+            else {
+                 DBG_AI << "Not as good."<< std::endl;
+                 DBG_AI << "Reality check: best defender = " << best->second.first->defender << " , value = " << best->second.first->get_obj() << std::endl;
+            }
+//#endif
         }
                 
         j = best->second.first->begin();
         best_target = best->second.first->defender;
-        DBG_AI << "New Best Moves List:" << std::endl;
+        DBG_AI << "New Best Moves List: *j = " << *j << std::endl;
+        get_adjacent_tiles(best_target,adjacent_tiles);
         for(size_t n = 0; n != 6; ++n) {
             range = dstsrc.equal_range(adjacent_tiles[n]);
             while(range.first != range.second) {
                 const map_location& dst = range.first->first;
                 const map_location& src = range.first->second;         
                 //y = xt, so divide by t which is in row[Ncol]. if this is > 0 then move.
-                DBG_AI << "Value" << (REAL)(k->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target; 
+                DBG_AI << "Value" << (REAL)(best->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target; 
 
                 if (best->second.first->var_gtr(j,.1)) {//((row[j++]/row[Ncol]) > .01) { 
+                    DBG_AI << "**" << std::endl; //src << " -> " << dst << " \\> " << i->get_location() << std::endl; 
+
                     execute_move_action(src, dst); //best_moves_list.push_back(std::make_pair<map_location, map_location> (src, dst));
-                    DBG_AI << "**"; //src << " -> " << dst << " \\> " << i->get_location() << std::endl; 
-                }//{execute_move_action(src, dst, false, true);}
+                    execute_attack_action(dst, best_target,-1);
+                } else //{execute_move_action(src, dst, false, true);}
                 DBG_AI << std::endl;
                 ++range.first;
                 ++j;
             }
-            DBG_AI << "End of list." << std::endl;
         }        
+        DBG_AI << "End of list." << std::endl;
         clock_t c1 = clock();        
         double runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
         DBG_AI << "Finish lp_ai::play_turn(), took "<< runtime_diff_ms << " ms." << std::endl;
@@ -196,7 +220,7 @@ void lp_ai::buildLPs()
             }
         }
 
-        DBG_AI << "LP_AI: Make Lps" << std::endl;
+        DBG_AI << "LP_AI: Make Lps. I now have " << ctk_lps.size() << " ctk LP's." << std::endl;
 
         //now make pointers to iterate for the ctk_lps.
         dmg_lp->make_lp();
@@ -286,6 +310,7 @@ void lp_ai::buildLPs()
         for (k = ctk_lps.begin(); k != ctk_lps.end(); ++k)
         {
             k->second.first->solve();
+            DBG_AI << "Here's my first solution value: " << k->second.first->get_var(k->second.first->begin()) << std::endl;
 #ifdef MCLP_FILEOUT
                  sprintf(file_name, "temp%3u.lp", ++file_counter);
                  LOG_AI << "Here's my LP to attack " << (*(k->second.first->defender)) << " in file " << file_name << std::endl;
@@ -295,7 +320,7 @@ void lp_ai::buildLPs()
 
         c1 = clock();        
         runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
-        DBG_AI << "Finished solving LPs. Took " << runtime_diff_ms << " ms. " << std::endl;
+        DBG_AI << "Finished solving LPs. Took " << runtime_diff_ms << " ms. I now have " << ctk_lps.size() << " ctk LPs." << std::endl;
 }
 
 // ======== Test ai's to visiualize LP output ===========

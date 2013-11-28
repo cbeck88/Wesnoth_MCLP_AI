@@ -169,13 +169,12 @@ unsigned char FracLP::finishRows()
 
 unsigned char FracLP::solve()
 {
-#ifdef MCLP_DEBUG
     DBG_AI << "FracLP::solve()'ing." << std::endl;
 
 //    DBG_AI << "Ncol = " << Ncol << std::endl;
 //    DBG_AI << "here's GETLOWBO:" << std::endl;
-    SPAM_GET_LOWBO
-#endif
+//    SPAM_GET_LOWBO
+    DBG_AI << "not_solved_yet = " << not_solved_yet << std::endl;
 
     not_solved_yet = false;
 
@@ -221,7 +220,8 @@ unsigned char FracLP::solve()
     };
 //    DBG_AI << "Done: Ncol = " << Ncol << std::endl;
 //    DBG_AI << "LP::solve() done, here's GETLOWBO:" << std::endl;
-    SPAM_GET_LOWBO
+//    SPAM_GET_LOWBO
+    DBG_AI << "not_solved_yet = " << not_solved_yet << std::endl;
 
     return ret;
 }
@@ -266,13 +266,14 @@ REAL LP::get_var(int i)
 
 REAL FracLP::get_var(int i)
 {
-    if (not_solved_yet) {ERR_AI << "LP::get_var before solve" << std::endl; return 0;}
+    DBG_AI << "FracLP::get_var() -- denom_row[Ncol] = " << denom_row[Ncol] << " -- not_solved_yet = " << not_solved_yet << std::endl;
+    if (not_solved_yet == true) {ERR_AI << "FracLP::get_var before solve" << std::endl; return 0;}
     return denom_row[i-1]/denom_row[Ncol];
 }
 
 bool FracLP::var_gtr(int i, REAL eps)
 {
-    if (not_solved_yet) {ERR_AI << "LP::get_var before solve" << std::endl; return 0;}
+    if (not_solved_yet == true) {ERR_AI << "FracLP::var_gtr before solve" << std::endl; return 0;}
     return (denom_row[i-1] > (eps * denom_row[Ncol]));
 }
 
@@ -283,6 +284,7 @@ REAL LP::get_obj()
 
 REAL FracLP::get_obj()
 {
+    DBG_AI << "FracLP::get_obj: not_solved_yet = " << not_solved_yet << std::endl;    
     return lp_solve::get_objective(lp);
 }
 
