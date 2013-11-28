@@ -33,14 +33,16 @@ The ai solves this for every enemy unit, picks the best one and displays the opt
 these units to attack.
 
 Both of these are just tools to visualize the results of these LPs for further testing. 
+
+**lp_ai**: A helper ai using the lps tested in lp_ai_1, lp_ai_2, which seeks to execute turn as aggressively 
+as possible, using maximum slot efficiency. In a preliminary state.
+
 *These ais will not recruit or grab villages.* 
-You should load them from a savegame file which is already set up for an attack.
+You should load them from a savegame file which is already set up for an attack. This is most easily done using the tools in testsaves/.
+
 
 Future AIs
 ----------
-
-**lp_ai**: Will be a helper ai using the lps tested in lp_ai_1, lp_ai_2, which seeks to execute turn as aggressively 
-as possible.
 
 **mclp_ai**: Will use lp_ai in monte carlo simulations.
 
