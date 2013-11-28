@@ -33,12 +33,12 @@
 #include <iterator>
 #include <algorithm>
 
-static lg::log_domain log_ai("ai/general");
-//this in lp.cpp now 
-#define DBG_AI LOG_STREAM(debug, log_ai)
-#define LOG_AI LOG_STREAM(info, log_ai)
-#define WRN_AI LOG_STREAM(warn, log_ai)
-#define ERR_AI LOG_STREAM(err, log_ai)
+//static lg::log_domain log_ai("ai/general");
+//this in lp.hpp now 
+//#define DBG_AI LOG_STREAM(debug, log_ai)
+//#define LOG_AI LOG_STREAM(info, log_ai)
+//#define WRN_AI LOG_STREAM(warn, log_ai)
+//#define ERR_AI LOG_STREAM(err, log_ai)
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -55,8 +55,8 @@ typedef std::multimap<map_location,int>::iterator locItor;
 // Implementation of LP wrappers
 //*************************************************************
 
-damageLP::damageLP():slotMap(), unitMap(), defenderMap(), Ncol(0),cols() {}
-ctkLP::ctkLP(map_location ml): defender(ml), slotMap(), unitMap(),Ncol(0),cols(),made(false), holdingnum(false), holdingdenom(false) {}
+damageLP::damageLP():lp(), slotMap(), unitMap(), defenderMap(), Ncol(0),cols() {}
+ctkLP::ctkLP(map_location ml): defender(ml), lp(), slotMap(), unitMap(),Ncol(0),cols(),made(false), holdingnum(false), holdingdenom(false) {}
 
 void damageLP::insert( const map_location src, const map_location dst, map_location target)
 {
@@ -181,6 +181,8 @@ void damageLP::make_lp()
     //LP new_LP(Ncol); //this makes it on the stack... bad I think
     //lp = & new_LP;
     lp.reset(new LP(Ncol));
+
+    DBG_AI << "damageLP::make_lp adding constraints now" << std::endl;
 
     lp->rows_LE_1<const map_location> (&slotMap);
 #ifdef MCLP_DEBUG

@@ -14,6 +14,19 @@
    #define REAL double
 #endif
 
+static lg::log_domain log_ai("ai/general");
+//this in lp.cpp now 
+#define DBG_AI LOG_STREAM(debug, log_ai)
+#define LOG_AI LOG_STREAM(info, log_ai)
+#define WRN_AI LOG_STREAM(warn, log_ai)
+#define ERR_AI LOG_STREAM(err, log_ai)
+
+//#define DBG_AI_LP_HPP DBG_AI
+
+//Changed this at some point when I was having problems... 0 seems to be the correct value, 1 leads to segfaults.
+#define BASE_ARRAYS_FROM 0
+
+
 typedef std::list<int>::iterator int_ptr;
 
 //This produces compiler bugs so we need to use a workaround
@@ -128,39 +141,49 @@ private:
 
 template<class T> unsigned char LP::row_LE_1 (typename Itor<T>::type iter, typename Itor<T>::type end, int cnt)
 {
+    //DBG_AI_LP_HPP<< "Row add start: Ncol = " << Ncol << std::endl;
+
     assert(cnt > 0);
-    int j = 1;
-    int *col = (int*) malloc((cnt+1) * sizeof(*col));
-    REAL *row = (REAL*) malloc((cnt+1) * sizeof(*row));
+    int j = BASE_ARRAYS_FROM;
+    int *col = (int*) malloc((cnt+BASE_ARRAYS_FROM) * sizeof(*col));
+    REAL *row = (REAL*) malloc((cnt+BASE_ARRAYS_FROM) * sizeof(*row));
     unsigned char ret;
 
     //for each column in iterator, add a 1 in the row for this constraint
     while (iter != end) {
         col[j] = *(iter->second);
         row[j++] = (REAL) 1.0;
+        //DBG_AI_LP_HPP<< "col[" << j-1 << "] = " << col[j-1] << "\trow[" << j-1 << "] = " << row[j-1] << std::endl;
         ++iter;
     }
-    assert(j==(cnt+1)); // j = 1 + one for every input element, should be cnt + 1
+    assert(j==(cnt+BASE_ARRAYS_FROM)); // j = BASE_ARRAYS_FROM + one for every input element, should be cnt + BASE_ARRAYS_FROM
 
-    ret = lp_solve::add_constraintex(lp,j+1,row,col, LP_SOLVE_LE, 1);  //<= 1 constraint in this row, zeros elsewhere
+    //DBG_AI_LP_HPP<< "add(lp," << j << ", row, col <= 1);" << std::endl;
+
+    ret = lp_solve::add_constraintex(lp,j,row,col, LP_SOLVE_LE, 1);  //<= 1 constraint in this row, zeros elsewhere
     //assert(ret);
+
+    //DBG_AI_LP_HPP<< "row_LE_1 free-ing memory" << std::endl;
+
     free(col);
     free(row);
+
+    //DBG_AI_LP_HPP<< "Row add end" << std::endl;
+
 
     return(ret);
 }
 
 template<class T> unsigned char FracLP::row_LE_1 ( typename Itor<T>::type iter, typename Itor<T>::type end, int cnt)
 {
-    //DBG_AI << "Row add start: Ncol = " << Ncol << std::endl;
+    //DBG_AI_LP_HPP<< "Row add start: Ncol = " << Ncol << std::endl;
 
     assert(cnt > 0);
 
     //cnt++; cnt++// +2, need to include a spot for t variable, and be 1 based
         
-    #define BASE_ARRAYS_FROM 0
     int j = BASE_ARRAYS_FROM;//1;
-    int *col = (int*) malloc((cnt+2) * sizeof(*col));
+    int *col = (int*) malloc((cnt+1+BASE_ARRAYS_FROM) * sizeof(*col));
     REAL *row = (REAL*) malloc((cnt+2) * sizeof(*row));
     unsigned char ret;
                 
@@ -168,22 +191,22 @@ template<class T> unsigned char FracLP::row_LE_1 ( typename Itor<T>::type iter, 
     while (iter != end) {
         col[j] = *(iter->second);
         row[j++] = (REAL) 1.0;
-        //DBG_AI << "col[" << j-1 << "] = " << col[j-1] << "\trow[" << j-1 << "] = " << row[j-1] << std::endl;
+        //DBG_AI_LP_HPP<< "col[" << j-1 << "] = " << col[j-1] << "\trow[" << j-1 << "] = " << row[j-1] << std::endl;
         ++iter;
     }
     col[j] = Ncol+1;  //add a -1 for t
-    row[j] = (REAL) -1.0; 
-    //DBG_AI << "col[" << j << "] = " << col[j] << "\trow[" << j << "] = " << row[j] << std::endl;
-    assert(j == (cnt+BASE_ARRAYS_FROM)); //j = BASE_ARRAYS_FROM + 1 for every input element, + 1 again, should be cnt + BASE_ARRAYS_FROM
+    row[j++] = (REAL) -1.0; 
+    //DBG_AI_LP_HPP<< "col[" << j << "] = " << col[j] << "\trow[" << j << "] = " << row[j] << std::endl;
+    assert(j == (cnt+1+BASE_ARRAYS_FROM)); //j = BASE_ARRAYS_FROM + 1 for every input element, + 1 again for t, should be cnt + 1 + BASE_ARRAYS_FROM
 
-    //DBG_AI << "add(lp," << j+1 << ", row, col <= 0);" << std::endl;
+    //DBG_AI_LP_HPP<< "add(lp," << j << ", row, col <= 0);" << std::endl;
 
-    ret = lp_solve::add_constraintex(lp,j+1,row,col, LP_SOLVE_LE, 0); //The constraint is Ax <= bt
+    ret = lp_solve::add_constraintex(lp,j,row,col, LP_SOLVE_LE, 0); //The constraint is Ax <= bt
     //assert(ret);
     free(col);
     free(row);
 
-//    DBG_AI << "Row add end: Ncol = " << Ncol << std::endl;
+//    DBG_AI_LP_HPP<< "Row add end: Ncol = " << Ncol << std::endl;
     return ret;
 }
 

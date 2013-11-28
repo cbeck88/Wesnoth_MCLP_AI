@@ -1,9 +1,9 @@
 #include "lp.hpp"
 #include "lp_solve.hpp"
 
-static lg::log_domain log_ai("ai/general");
-#define ERR_AI LOG_STREAM(err, log_ai)
-#define DBG_AI LOG_STREAM(debug, log_ai)
+//static lg::log_domain log_ai("ai/general");
+//#define ERR_AI LOG_STREAM(err, log_ai)
+//#define DBG_AI LOG_STREAM(debug, log_ai)
 
 REAL FracLP::shortrow[] = {1,-1};
 
@@ -17,6 +17,7 @@ REAL FracLP::shortrow[] = {1,-1};
 
 LP::LP(int n): Ncol(n),lp(NULL),vars(NULL)
 {
+    DBG_AI << "LP::LP();" << std::endl;
     lp = lp_solve::make_lp(0,n);
     assert(lp != NULL);
 

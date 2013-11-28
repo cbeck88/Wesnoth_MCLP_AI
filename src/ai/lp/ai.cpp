@@ -177,15 +177,18 @@ void lp_ai::buildLPs()
                      //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
                      while(range.first != range.second) {
                          DBG_AI << "LP_AI:" << Ncol << ":" << range.first->second << " -> " << range.first->first << " \\> " << i->get_location() << std::endl;
+                         DBG_AI << "LP_AI: inserting to dmg_lp" << std::endl;
                          dmg_lp->insert(range.first->second,range.first->first,i->get_location());
                          if (!haveTarget) {
                              current_target.reset(new ctkLP(i->get_location()));
                              current_target->set_obj_num_constant(-(REAL) i->hitpoints() * 100); // * 100 because CTH is an integer
                              current_target->set_obj_denom_constant((REAL) 1);
 
+                             DBG_AI << "LP_AI: inserting new ctk_lp to ctk_lps" << std::endl;
                              ctk_lps.insert(std::make_pair(i->get_location(), std::make_pair(current_target, current_target->begin())));
                              haveTarget = true;
                          }
+                         DBG_AI << "LP_AI: inserting to ctk_lp" << std::endl;
                          current_target->insert(range.first->second, range.first->first);
                          ++range.first;
                      }
@@ -193,15 +196,22 @@ void lp_ai::buildLPs()
             }
         }
 
+        DBG_AI << "LP_AI: Make Lps" << std::endl;
+
         //now make pointers to iterate for the ctk_lps.
         dmg_lp->make_lp();
+
+        DBG_AI << "LP_AI: Made dmg_lp" << std::endl;
 
         std::map<const map_location, ctk_pod >::iterator k;
         for(k = ctk_lps.begin(); k != ctk_lps.end(); ++k)
         {
             k->second.first->make_lp();
+            DBG_AI << "LP_AI: Made a ctk_lp" << std::endl;
         }
         fwd_ptr j=dmg_lp->begin();
+
+        DBG_AI << "LP_AI: Load stats" << std::endl;
 
         for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
             if(current_team().is_enemy(i->side()) && !i->incapacitated()) {        
