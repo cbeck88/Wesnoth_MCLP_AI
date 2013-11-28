@@ -32,6 +32,7 @@ LP::LP(int n): Ncol(n),lp(NULL),vars(NULL)
 //- create the constraints
 //- turn row entry mode off
 
+
 FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
 {   //Ncol is initialized to n, but we need Ncol + 1 for sizing with lp_solve.
 //    DBG_AI << "FracLP(" << n << ")" << std::endl;
@@ -70,6 +71,14 @@ FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
 //#endif
 //}
 
+LP::LP(LP& copy_from_me)
+{
+    DBG_AI << "LP_copy: incoming Ncol = " << copy_from_me.Ncol << std::endl;
+    Ncol = copy_from_me.Ncol;
+    vars = NULL;
+    lp = lp_solve::copy_lp(copy_from_me.lp);
+}
+
 unsigned char LP::set_col_name(int col, char* str)
 {
     return lp_solve::set_col_name(lp, col, str);
@@ -105,11 +114,17 @@ unsigned char FracLP::set_boolean(int col)
 
 unsigned char LP::delete_col(int col)
 {
+    assert(col > 0);
+    assert(col <= Ncol);
+    Ncol--;
     return lp_solve::del_column(lp, col);
 }
 
 unsigned char FracLP::delete_col(int col)
 {
+    assert(col > 0);
+    assert(col <= Ncol);
+    Ncol--;
     return lp_solve::del_column(lp, col);
 }
 
@@ -147,9 +162,10 @@ unsigned char LP::solve()
         ERR_AI << "LP::solve() solve gave an error code " << ret << std::endl;
     }
 
-    if (lp_solve::get_ptr_variables(lp,&vars) != LP_SOLVE_TRUE) {
-        ERR_AI << "LP::solve() failed to get variables" << std::endl;
-    }
+//Going to move this to get_var
+//    if (lp_solve::get_ptr_variables(lp,&vars) != LP_SOLVE_TRUE) {
+//        ERR_AI << "LP::solve() failed to get variables" << std::endl;
+//    }
     return ret;
 }
 
@@ -174,7 +190,7 @@ unsigned char FracLP::solve()
 //    DBG_AI << "Ncol = " << Ncol << std::endl;
 //    DBG_AI << "here's GETLOWBO:" << std::endl;
 //    SPAM_GET_LOWBO
-    DBG_AI << "not_solved_yet = " << not_solved_yet << std::endl;
+//    DBG_AI << "not_solved_yet = " << not_solved_yet << std::endl;
 
     not_solved_yet = false;
 
@@ -221,7 +237,7 @@ unsigned char FracLP::solve()
 //    DBG_AI << "Done: Ncol = " << Ncol << std::endl;
 //    DBG_AI << "LP::solve() done, here's GETLOWBO:" << std::endl;
 //    SPAM_GET_LOWBO
-    DBG_AI << "not_solved_yet = " << not_solved_yet << std::endl;
+//    DBG_AI << "not_solved_yet = " << not_solved_yet << std::endl;
 
     return ret;
 }
@@ -260,7 +276,9 @@ unsigned char FracLP::set_obj_denom_constant(REAL val)
 
 REAL LP::get_var(int i)
 {
-    if (vars == NULL) {ERR_AI << "LP::get_var before solve" << std::endl; return 0;}
+    if (lp_solve::get_ptr_variables(lp,&vars) != LP_SOLVE_TRUE) {
+        ERR_AI << "LP::get_var() failed to get_ptr_variables" << std::endl;
+    }
     return vars[i-1];
 }
 

@@ -33,6 +33,7 @@ typedef std::list<int>::iterator fwd_ptr;
 class damageLP {
 public:
     damageLP();
+    damageLP(damageLP&);
     //~damageLP() { DBG_AI << "~damageLP();" << std::endl; } // if (lp != NULL) { delete(lp); } }
 
     void insert( map_location src, map_location dst, map_location def);

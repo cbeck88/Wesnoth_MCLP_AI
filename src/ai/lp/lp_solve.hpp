@@ -20,6 +20,7 @@ namespace lp_solve
     extern "C"
     {
         lprec* make_lp(int, int);        
+        lprec* copy_lp(lprec*);
         unsigned char set_add_rowmode(lprec*, unsigned char);
         unsigned char is_add_rowmode(lprec*);
         unsigned char add_constraint(lprec*,REAL*,int, REAL);

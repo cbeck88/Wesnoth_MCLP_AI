@@ -58,6 +58,9 @@ typedef std::multimap<map_location,int>::iterator locItor;
 damageLP::damageLP():lp(), slotMap(), unitMap(), defenderMap(), Ncol(0),cols() {}
 ctkLP::ctkLP(map_location ml): defender(ml), lp(), slotMap(), unitMap(),Ncol(0),cols(),made(false), holdingnum(false), holdingdenom(false) {}
 
+damageLP::damageLP(damageLP & copy_from_me): lp(new LP(*copy_from_me.lp)),slotMap(copy_from_me.slotMap),unitMap(copy_from_me.unitMap),defenderMap(copy_from_me.defenderMap),
+Ncol(copy_from_me.Ncol),cols(copy_from_me.cols) {}
+
 void damageLP::insert( const map_location src, const map_location dst, map_location target)
 {
 #ifdef MCLP_DEBUG
@@ -89,29 +92,50 @@ void ctkLP::insert(map_location src, map_location dst)
 
 #define remove_X(X) remove_ ## X (const map_location loc)                                                           \
 {                                                                                                                   \
+    DBG_AI << "called remove_ X " << std::endl;                                                                     \
+    DBG_AI << "Ncol = " << Ncol << " , lp->end() = " << lp->end() << std::endl;\
+    int temp = 0;                                                                                                   \
+    for (col_ptr ptr = cols.begin(); ptr != cols.end(); ++ptr)                                                      \
+    {                                                                                                               \
+        (*ptr)=++temp;                                                                                              \
+    }                                                                                                               \
+    DBG_AI << "initial condition has Ncol = " << Ncol << " and temp = " << temp << " and size = " << cols.size() << std::endl; \
     std::pair<std::multimap<const map_location, col_ptr>::iterator,std::multimap<const map_location, col_ptr>::iterator> range; \
-    int temp;                                                                                                       \
     std::priority_queue<int> to_die;                                                                                \
     for (range = X ## Map.equal_range(loc); range.first != range.second; ++range.first)                             \
     {                                                                                                               \
-        temp = *(range.second->second);                                                                             \
+        temp = *(range.first->second);                                                                              \
         assert(0 < temp);                                                                                           \
         assert(temp <= Ncol);                                                                                       \
+        DBG_AI << "to_die.push(" << temp << ");" << std::endl;              \
         to_die.push(temp);                                                                                          \
     }                                                                                                               \
     while (!to_die.empty())                                                                                         \
     {                                                                                                               \
+        DBG_AI << "delete_col(" << to_die.top() << ");" << std::endl;       \
         lp->delete_col(to_die.top());                                                                               \
+        cols.remove(to_die.top()); \
         to_die.pop();                                                                                               \
         Ncol--;                                                                                                     \
     }                                                                                                               \
+    X ## Map.erase(loc);                                                                                            \
     temp = 0;                                                                                                       \
     for (col_ptr ptr = cols.begin(); ptr != cols.end(); ++ptr)                                                      \
     {                                                                                                               \
         (*ptr)=++temp;                                                                                              \
     }                                                                                                               \
+    DBG_AI << "postcondition has Ncol = " << Ncol << " and temp = " << temp << " and lp->end() = " << lp->end() << std::endl; \
     assert(Ncol == temp);                                                                                           \
 }
+
+//    for (range = X ## Map.equal_range(loc); range.first != range.second; ++range.first)                             \
+    {                                                                                                               \
+    DBG_AI << "about to erase: cols.size = " << cols.size()  << std::endl;\
+        DBG_AI << "cols.erase(" << *(range.first->second) << ");" << std::endl;              \
+        cols.erase(range.first->second);                                                                            \
+    DBG_AI << "finished erasing: cols.size = " << cols.size()  << std::endl;\
+    }                                                                                                               \
+
     //If the return of equal range were guaranteed to be sorted wrt value we could use this:                        
     //But according to standard we cannot so we throw in a heap first ><
     //

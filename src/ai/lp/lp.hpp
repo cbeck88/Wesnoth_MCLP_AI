@@ -76,6 +76,7 @@ public:
 class LP /*: public Boolean_Program*/ {
 public:
     LP(int);
+    LP(LP & );
     //~LP() { if (lp != NULL) {lp_solve::delete_lp(lp);}}
     //turn this back on after fixed memory problems   
 
