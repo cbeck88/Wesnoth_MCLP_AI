@@ -79,7 +79,8 @@ private:
 
 class ctkLP {
 public:
-    ctkLP(map_location ml);
+    ctkLP(const map_location * ml);
+    ctkLP(boost::shared_ptr<const map_location> ml);
     //~ctkLP() { DBG_AI << "~ctkLP();" << std::endl; } //if (lp) {} else { delete(lp); } }
 
     void insert( map_location src, map_location dst);
@@ -109,7 +110,7 @@ public:
     unsigned char write_lp (char *);
     
     typedef fwd_ptr iterator;
-    map_location * defender; //This was private but i make it public now for debugging output
+    boost::shared_ptr<const map_location> defender; //This was private but i make it public now for debugging output
 
 
 private:

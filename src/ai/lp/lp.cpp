@@ -60,7 +60,8 @@ FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
     SPAM_GET_LOWBO
 }
 
-FracLP::~FracLP() { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
+//Turn this back on after fixed memory problems.
+//FracLP::~FracLP() { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
 
 //FracLP::~FracLP() {
 //#ifdef MCLP_DEBUG
@@ -95,7 +96,7 @@ unsigned char FracLP::set_boolean(int col)
         return LP_SOLVE_NOMEMORY;
 #endif
 
-    REAL shortrow_trial[2] = {1,-1}; //wondering if the static pass is causing memory corruption
+    REAL shortrow_trial[2] = {1,-1}; //wondering if the static pass is causing memory corruption. (this is outdated, i don't think it was...)
     int shortcol[2] = {col, Ncol+1}; //should be const but lib lp solve doesn't like that.
 //  const REAL FracLP::shortcol = {1,-1};
     return lp_solve::add_constraintex(lp, 2, shortrow_trial, shortcol, LP_SOLVE_LE, (REAL) 0); //Constraint is x_i <= t. We cache these inputs in shortrow, shortcol.
@@ -274,7 +275,6 @@ bool FracLP::var_gtr(int i, REAL eps)
     return (denom_row[i-1] > (eps * denom_row[Ncol]));
 }
 
-
 REAL LP::get_obj()
 {
     return lp_solve::get_objective(lp);
@@ -292,8 +292,10 @@ unsigned char LP::write_lp(char * file)
 
 unsigned char FracLP::write_lp(char * file)
 {
-//    DBG_AI << "FracLP::write_lp(), here's GETLOWBO:" << std::endl;
+#ifdef MCLP_DEBUG
+    DBG_AI << "FracLP::write_lp(), here's GETLOWBO:" << std::endl;
     SPAM_GET_LOWBO
+#endif 
 
     return lp_solve::write_lp(lp,file);
 }

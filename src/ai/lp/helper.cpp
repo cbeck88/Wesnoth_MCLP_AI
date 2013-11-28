@@ -56,7 +56,9 @@ typedef std::multimap<map_location,int>::iterator locItor;
 //*************************************************************
 
 damageLP::damageLP():slotMap(), unitMap(), defenderMap(), Ncol(0),cols() {}
-ctkLP::ctkLP(map_location ml): slotMap(), unitMap(),defender(& ml),Ncol(0),cols(),made(false), holdingnum(false), holdingdenom(false) {}
+ctkLP::ctkLP(boost::shared_ptr<const map_location> ml): defender(ml),slotMap(), unitMap(),Ncol(0),cols(),made(false), holdingnum(false), holdingdenom(false) {}
+ctkLP::ctkLP(const map_location * ml): defender(ml),slotMap(), unitMap(),Ncol(0),cols(),made(false), holdingnum(false), holdingdenom(false) {}
+
 
 void damageLP::insert( const map_location src, const map_location dst, map_location target)
 {
@@ -196,9 +198,7 @@ void damageLP::make_lp()
 
 void ctkLP::make_lp()
 {
-#ifdef MCLP_DEBUG
     DBG_AI << "ctkLP::make_lp Ncol = " << Ncol << std::endl;
-#endif
     made = true;
     //FracLP new_LP(Ncol); //this make it on the stack... bad I think
     //lp = & new_LP;
@@ -217,6 +217,7 @@ void ctkLP::make_lp()
 #endif
     lp->finishRows(); // this will be slow but doing it for now.
     //bool_ptr = cols.begin();
+    DBG_AI << "ctkLP::make_lp finished." << std::endl;
 }
 
 unsigned char damageLP::set_obj(fwd_ptr ptr, REAL r)

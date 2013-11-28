@@ -179,7 +179,7 @@ void lp_ai::buildLPs()
                          DBG_AI << "LP_AI:" << Ncol << ":" << range.first->second << " -> " << range.first->first << " \\> " << i->get_location() << std::endl;
                          dmg_lp->insert(range.first->second,range.first->first,i->get_location());
                          if (!haveTarget) {
-                             current_target.reset(new ctkLP(i->get_location()));
+                             current_target.reset(new ctkLP(&(i->get_location())));
                              current_target->set_obj_num_constant(-(REAL) i->hitpoints() * 100); // * 100 because CTH is an integer
                              current_target->set_obj_denom_constant((REAL) 1);
 
@@ -193,6 +193,8 @@ void lp_ai::buildLPs()
             }
         }
 
+        DBG_AI << "Making lps and pointers" << std::endl;
+
         //now make pointers to iterate for the ctk_lps.
         dmg_lp->make_lp();
 
@@ -202,6 +204,8 @@ void lp_ai::buildLPs()
             k->second.first->make_lp();
         }
         fwd_ptr j=dmg_lp->begin();
+
+        DBG_AI << "Loading stats" << std::endl;
 
         for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
             if(current_team().is_enemy(i->side()) && !i->incapacitated()) {        
@@ -523,7 +527,7 @@ void lp_2_ai::play_turn()
 
         for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
             if(current_team().is_enemy(i->side()) && !i->incapacitated()) {
-                 lp.reset(new ctkLP(i->get_location()));
+                 lp.reset(new ctkLP(&(i->get_location())));
                  Ncol = 0;        
                  c0 = clock();
 #ifdef MCLP_DEBUG
