@@ -23,7 +23,6 @@
 //#include "../../terrain_filter.hpp"
 #include "../../unit_display.hpp"
 #include "../../wml_exception.hpp"
-#include "../../pathfind/pathfind.hpp"
 //#include "../../unit_map.hpp"
 
 #include <stdio.h>
@@ -89,6 +88,7 @@ void lp_ai::switch_side(side_number side)
 
 void lp_ai::play_turn()
 {
+        boost::shared_ptr<damageLP> templp;
 	//game_events::fire("ai turn");
         LOG_AI << "lp_ai new turn. have " << ctk_lps.size() << " ctk LPs." << std::endl;
 
@@ -135,6 +135,10 @@ void lp_ai::play_turn()
                 
         j = best->second.first->begin();
         best_target = best->second.first->defender;
+
+        map_location best_src, best_dst;
+        current_opt = -100000;
+
         DBG_AI << "New Best Moves List: *j = " << *j << std::endl;
         get_adjacent_tiles(best_target,adjacent_tiles);
         for(size_t n = 0; n != 6; ++n) {
@@ -147,11 +151,23 @@ void lp_ai::play_turn()
 
                 if (best->second.first->var_gtr(j,.1)) {//((row[j++]/row[Ncol]) > .01) { 
                     DBG_AI << "**" << std::endl; //src << " -> " << dst << " \\> " << i->get_location() << std::endl; 
-
-                    execute_move_action(src, dst); //best_moves_list.push_back(std::make_pair<map_location, map_location> (src, dst));
-                    execute_attack_action(dst, best_target,-1);
+                    templp.reset(new damageLP(*dmg_lp));
+                    templp->remove_unit(src);
+                    templp->remove_slot(dst);
+                    templp->solve();
+                    this_opt = templp->get_obj();
+                    if (this_opt > current_opt)
+                    {
+                        DBG_AI << "***found a new best move: " << src << " -> " << dst << " \\> " << best_target << std::endl; 
+                        current_opt = this_opt; best_src = src; best_dst = dst;
+                    }
+                    else {
+                        DBG_AI << "not as good..."<< std::endl;
+                    }
+//                    move_result_ptr mr = execute_move_action(src, dst); //best_moves_list.push_back(std::make_pair<map_location, map_location> (src, dst));
+//                    attack_result_ptr ar = execute_attack_action(dst, best_target,-1);
                 } else //{execute_move_action(src, dst, false, true);}
-                DBG_AI << std::endl;
+                {DBG_AI << std::endl;}
                 ++range.first;
                 ++j;
             }
@@ -161,6 +177,26 @@ void lp_ai::play_turn()
         double runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
         DBG_AI << "Finish lp_ai::play_turn(), took "<< runtime_diff_ms << " ms." << std::endl;
 
+        if (current_opt > 1) {
+            move_result_ptr mr = execute_move_action(best_src,best_dst);
+            if (mr->is_ok()) {
+                attack_result_ptr ar = execute_attack_action(best_dst,best_target,-1);
+                if(ar->is_ok()) { 
+                    DBG_AI << "All is clear, now tail recursing." << std::endl;
+                    buildLPs();
+                    play_turn();
+                } 
+                else {
+                    ERR_AI << "Attack Error of some kind " << ar << std::endl;
+                }
+            } 
+            else {
+            ERR_AI << "Move Error of some kind " << mr << std::endl;
+            }
+        } 
+        else {
+            DBG_AI << "No moves found of any quality, ending turn. " << std::endl;
+        }
 }
 
 void lp_ai::buildLPs()
@@ -181,8 +217,6 @@ void lp_ai::buildLPs()
         bool haveTarget = false;
         dmg_lp = boost::shared_ptr<damageLP> (new damageLP());
         //dmg_lp = & dmg_lp_new;
-
-        std::map<map_location,pathfind::paths> possible_moves;
 
         calculate_possible_moves(possible_moves,srcdst,dstsrc,false);
 

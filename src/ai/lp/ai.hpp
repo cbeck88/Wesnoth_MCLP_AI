@@ -22,6 +22,7 @@
 #include "../contexts.hpp"
 #include "../interface.hpp"
 #include "../composite/ai.hpp"
+#include "../../pathfind/pathfind.hpp"
 
 #include <boost/shared_ptr.hpp>
 
@@ -76,6 +77,7 @@ private:
         std::map<const map_location, ctk_pod > ctk_lps;
         boost::shared_ptr<damageLP> dmg_lp;
 
+        std::map<map_location,pathfind::paths> possible_moves;
         move_map srcdst, dstsrc;
 
         void buildLPs();
