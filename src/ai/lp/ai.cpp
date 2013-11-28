@@ -113,7 +113,7 @@ void lp_ai::play_turn()
         }
                 
         j = best->second.first->begin();
-        best_target = *(best->second.first->defender);
+        best_target = best->second.first->defender;
         DBG_AI << "New Best Moves List:" << std::endl;
         for(size_t n = 0; n != 6; ++n) {
             range = dstsrc.equal_range(adjacent_tiles[n]);
@@ -183,7 +183,7 @@ void lp_ai::buildLPs()
                              current_target->set_obj_num_constant(-(REAL) i->hitpoints() * 100); // * 100 because CTH is an integer
                              current_target->set_obj_denom_constant((REAL) 1);
 
-                             ctk_lps.insert(std::make_pair(i->get_location(), std::make_pair(boost::shared_ptr<ctkLP>(current_target), current_target->begin())));
+                             ctk_lps.insert(std::make_pair(i->get_location(), std::make_pair(current_target, current_target->begin())));
                              haveTarget = true;
                          }
                          current_target->insert(range.first->second, range.first->first);

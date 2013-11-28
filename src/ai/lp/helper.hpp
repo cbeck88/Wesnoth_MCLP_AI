@@ -3,6 +3,8 @@
 
 #include "MCLP_FLAGS.hpp"
 
+#include "../../map_location.hpp"
+
 #include <map>
 #include <list>
 #include <boost/shared_ptr.hpp>
@@ -109,7 +111,7 @@ public:
     unsigned char write_lp (char *);
     
     typedef fwd_ptr iterator;
-    map_location * defender; //This was private but i make it public now for debugging output
+    const map_location defender; //This was private but i make it public now for debugging output
 
 
 private:

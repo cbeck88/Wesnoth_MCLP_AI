@@ -9,10 +9,6 @@
 #define LP_SOLVE_LOG_MODE LP_SOLVE_IMPORTANT
 #endif
 
-//#define LP_SET_LOWBO // turn this own to enable set lowbo flags. defaults of >= 0 for all seems fine to me.
-
-//#include <fstream>
-
 #ifndef REAL 
    #define REAL double
 #endif

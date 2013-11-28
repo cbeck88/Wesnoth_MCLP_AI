@@ -56,7 +56,7 @@ typedef std::multimap<map_location,int>::iterator locItor;
 //*************************************************************
 
 damageLP::damageLP():slotMap(), unitMap(), defenderMap(), Ncol(0),cols() {}
-ctkLP::ctkLP(map_location ml): slotMap(), unitMap(),defender(& ml),Ncol(0),cols(),made(false), holdingnum(false), holdingdenom(false) {}
+ctkLP::ctkLP(map_location ml): defender(ml), slotMap(), unitMap(),Ncol(0),cols(),made(false), holdingnum(false), holdingdenom(false) {}
 
 void damageLP::insert( const map_location src, const map_location dst, map_location target)
 {

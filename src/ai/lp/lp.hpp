@@ -63,8 +63,9 @@ public:
 class LP /*: public Boolean_Program*/ {
 public:
     LP(int);
-    ~LP() { if (lp != NULL) {lp_solve::delete_lp(lp);}}
-   
+    //~LP() { if (lp != NULL) {lp_solve::delete_lp(lp);}}
+    //turn this back on after fixed memory problems   
+
     unsigned char finishRows();
     template <class T> unsigned char row_LE_1 ( typename Itor<T>::type , typename Itor<T>::type , int);
     template <class T> void rows_LE_1 ( typename std::multimap< T , int_ptr > *rowset);
@@ -89,7 +90,8 @@ private:
 class FracLP /*: public Boolean_Program*/ {
 public:
     FracLP(int n);
-    ~FracLP(); // { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
+    //Turn this back on after fixed memory problems.
+    //~FracLP(); // { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
     //~FracLP();
 
     unsigned char finishRows();
