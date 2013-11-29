@@ -54,7 +54,7 @@ typedef std::multimap<map_location,int>::iterator locItor;
 // Implementation of AI's
 //*************************************************************
 
-lp_ai::lp_ai(default_ai_context &context, const config& cfg):ai_composite(context, cfg), ctk_lps() { }
+lp_ai::lp_ai(default_ai_context &context, const config& cfg):ai_composite(context, cfg), ctk_lps(),units_(resources::units) {}
 
 std::string lp_ai::describe_self() const
 {
@@ -65,7 +65,9 @@ std::string lp_ai::describe_self() const
 void lp_ai::new_turn()
 {
         LOG_AI << "lp_ai: new turn" << std::endl;
-        buildLPs();
+	//units_ = *resources::units;
+        //buildLPs();
+        //buildLPs();
 }
 
 void lp_ai::on_create()
@@ -88,6 +90,8 @@ void lp_ai::switch_side(side_number side)
 
 void lp_ai::play_turn()
 {
+        buildLPs();
+
         boost::shared_ptr<damageLP> templp;
 	//game_events::fire("ai turn");
         LOG_AI << "lp_ai new turn. have " << ctk_lps.size() << " ctk LPs." << std::endl;
@@ -183,7 +187,6 @@ void lp_ai::play_turn()
                 attack_result_ptr ar = execute_attack_action(best_dst,best_target,-1);
                 if(ar->is_ok()) { 
                     DBG_AI << "All is clear, now tail recursing." << std::endl;
-                    buildLPs();
                     play_turn();
                 } 
                 else {
@@ -216,17 +219,50 @@ void lp_ai::buildLPs()
         //ctkLP current_target(map_location::null_location);
         bool haveTarget = false;
         dmg_lp = boost::shared_ptr<damageLP> (new damageLP());
-        //dmg_lp = & dmg_lp_new;
+        map_location target;
 
+        DBG_AI << "buildLPs: getting units" << std::endl;
+
+        units_ = resources::units;
+        srcdst.clear();
+        dstsrc.clear();
+        possible_moves.clear();
+
+        DBG_AI << "buildLPs: calculating moves:" \
+               << "\tpossible_moves.size() = " << possible_moves.size() << "\n\tsrcdst.size() = " << srcdst.size() << "\n\tdstsrc.size() = " << dstsrc.size() << std::endl;
         calculate_possible_moves(possible_moves,srcdst,dstsrc,false);
+        DBG_AI << "buildLPs: calculating moves done" \
+               << "\tpossible_moves.size() = " << possible_moves.size() << "\n\tsrcdst.size() = " << srcdst.size() << "\n\tdstsrc.size() = " << dstsrc.size() << std::endl;
 
-	unit_map& units_ = *resources::units;
-
+        unit_map::iterator i;
         std::pair<Itor, Itor> range;
-
         map_location adjacent_tiles[6];
 
-        for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
+        DBG_AI << " Begin reality check -- is every src in dstsrc findable? " << std::endl;
+        for(i = units_->begin(); i != units_->end(); ++i) {
+            if(current_team().is_enemy(i->side()) && !i->incapacitated()) {
+                 get_adjacent_tiles(i->get_location(),adjacent_tiles);
+                 for(size_t n = 0; n != 6; ++n) {
+                     range = dstsrc.equal_range(adjacent_tiles[n]);
+                     //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
+                     while(range.first != range.second) {
+                         const map_location& dst = range.first->first;
+                         const map_location& src = range.first->second;
+                         //these are dst and src for the attacking unit
+                         const unit_map::const_iterator un = units_->find(src);
+
+                         assert(un != units_->end()); //this assertion was failing and i'm not sure why.
+                         range.first++;
+                     }
+                 }
+            }
+        }
+        DBG_AI << " Passed reality check." << std::endl;
+
+        DBG_AI << "buildLPs: starting loop" << std::endl;
+
+
+        for(i = units_->begin(); i != units_->end(); ++i) {
             if(current_team().is_enemy(i->side()) && !i->incapacitated()) {
                  haveTarget = false;        
                  get_adjacent_tiles(i->get_location(),adjacent_tiles);
@@ -234,19 +270,19 @@ void lp_ai::buildLPs()
                      range = dstsrc.equal_range(adjacent_tiles[n]);
                      //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
                      while(range.first != range.second) {
-                         DBG_AI << "LP_AI:" << Ncol << ":" << range.first->second << " -> " << range.first->first << " \\> " << i->get_location() << std::endl;
-                         DBG_AI << "LP_AI: inserting to dmg_lp" << std::endl;
+                         DBG_AI << "LP_AI: " << ++Ncol << " : " << range.first->second << " -> " << range.first->first << " \\> " << i->get_location() << std::endl;
+                         //DBG_AI << "LP_AI: inserting to dmg_lp" << std::endl;
                          dmg_lp->insert(range.first->second,range.first->first,i->get_location());
                          if (!haveTarget) {
                              current_target.reset(new ctkLP(i->get_location()));
                              current_target->set_obj_num_constant(-(REAL) i->hitpoints() * 100); // * 100 because CTH is an integer
                              current_target->set_obj_denom_constant((REAL) 1);
 
-                             DBG_AI << "LP_AI: inserting new ctk_lp to ctk_lps" << std::endl;
+                             //DBG_AI << "LP_AI: inserting new ctk_lp to ctk_lps" << std::endl;
                              ctk_lps.insert(std::make_pair(i->get_location(), std::make_pair(current_target, current_target->begin())));
                              haveTarget = true;
                          }
-                         DBG_AI << "LP_AI: inserting to ctk_lp" << std::endl;
+                         //DBG_AI << "LP_AI: inserting to ctk_lp" << std::endl;
                          current_target->insert(range.first->second, range.first->first);
                          ++range.first;
                      }
@@ -269,12 +305,9 @@ void lp_ai::buildLPs()
         }
         fwd_ptr j=dmg_lp->begin();
 
-        DBG_AI << "LP_AI: Load stats" << std::endl;
-
-        for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
-            if(current_team().is_enemy(i->side()) && !i->incapacitated()) {        
-                 k = ctk_lps.find(i->get_location());
-                 
+        DBG_AI << " Begin reality check -- is every src in dstsrc findable? " << std::endl;
+        for(i = units_->begin(); i != units_->end(); ++i) {
+            if(current_team().is_enemy(i->side()) && !i->incapacitated()) {
                  get_adjacent_tiles(i->get_location(),adjacent_tiles);
                  for(size_t n = 0; n != 6; ++n) {
                      range = dstsrc.equal_range(adjacent_tiles[n]);
@@ -283,17 +316,47 @@ void lp_ai::buildLPs()
                          const map_location& dst = range.first->first;
                          const map_location& src = range.first->second;
                          //these are dst and src for the attacking unit
-                         const unit_map::const_iterator un = units_.find(src);
-                         assert(un != units_.end());
+                         const unit_map::const_iterator un = units_->find(src);
+
+                         assert(un != units_->end()); //this assertion was failing and i'm not sure why.
+                         range.first++;
+                     }
+                 }
+            }
+        }
+        DBG_AI << " Passed reality check." << std::endl;
+
+        DBG_AI << "LP_AI: Load stats" << std::endl;
+
+        for(i = units_->begin(); i != units_->end(); ++i) {
+            if(current_team().is_enemy(i->side()) && !i->incapacitated()) {        
+DBG_AI << "getting target location: " << std::endl;
+                 target = i->get_location();
+DBG_AI << "getting ctk_lp associated: " << std::endl;
+                 k = ctk_lps.find(target);
+DBG_AI << "getting adjacent tiles: " << std::endl;
+                 get_adjacent_tiles(target,adjacent_tiles);
+                 for(size_t n = 0; n != 6; ++n) {
+                     range = dstsrc.equal_range(adjacent_tiles[n]);
+                     //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
+                     while(range.first != range.second) {
+                         const map_location& dst = range.first->first;
+                         const map_location& src = range.first->second;
+                         //these are dst and src for the attacking unit
+DBG_AI << "got src dst: " << std::endl;
+
+                         const unit_map::const_iterator un = units_->find(src);
+DBG_AI << "got src unit: " << std::endl;
+
+                         assert(un != units_->end()); //this assertion was failing and i'm not sure why.
 
 #ifdef MCLP_FILEOUT
                          std::stringstream s1,s2,s3;
-                         s1 << src; s2 << dst; s3 << i->get_location();
+                         s1 << src; s2 << dst; s3 << target;
                          sprintf(cstr, "(%s->%s\\>%s)", s1.str().c_str(), s2.str().c_str(), s3.str().c_str());
                          dmg_lp->set_col_name(j, cstr);//lp_solve::set_col_name(lp, j, cstr);
                          k->second.first->set_col_name(k->second.second, cstr);
 #endif
-
                          //const int chance_to_hit = un->second.defense_modifier(get_info().map,terrain);
                          //This code modified from attack::perform() in attack.cpp
                          /*  battle_context(const unit_map &units,
@@ -302,19 +365,23 @@ void lp_ai::buildLPs()
 					               double aggression = 0.0, const combatant *prev_def = NULL,
 					               const unit* attacker_ptr=NULL);
                               */
-                         battle_context *bc_ = new battle_context(units_, dst, i->get_location(), -1, -1, 0.0, NULL, &(*un));
+DBG_AI << "new battle context: " << std::endl;
+                         battle_context *bc_ = new battle_context(*units_, dst, target, -1, -1, 0.0, NULL, &(*un));
                          const battle_context_unit_stats a = bc_->get_attacker_stats();
+
+DBG_AI << "fight: " << std::endl;
 
                          //This code later in attack::perform() in attack.cpp
                          combatant attacker(bc_->get_attacker_stats());
                          combatant defender(bc_->get_defender_stats());
                          attacker.fight(defender,false);
+DBG_AI << "new battle context: " << std::endl;
  
                          dmg_lp->set_boolean(j);
-                         dmg_lp->set_obj(j++, (static_cast<REAL>(i->hitpoints()) - defender.average_hp()) * i->cost() / i->max_hitpoints()); 
+                         dmg_lp->set_obj(j++, ((REAL)(i->hitpoints()) - defender.average_hp()) * i->cost() / i->max_hitpoints()); 
 
-                         const REAL damage_expected = (static_cast<REAL>(a.damage)) * a.chance_to_hit * a.num_blows;
-                         const REAL damage_variance = (static_cast<REAL>(a.damage)) * a.damage * a.chance_to_hit * a.num_blows;
+                         const REAL damage_expected = ((REAL)(a.damage)) * a.chance_to_hit * a.num_blows;
+                         const REAL damage_variance = ((REAL)(a.damage)) * a.damage * a.chance_to_hit * a.num_blows;
 
                          k->second.first->set_boolean(k->second.second);
                          k->second.first->set_obj_num(k->second.second,damage_expected);
@@ -322,6 +389,8 @@ void lp_ai::buildLPs()
 
                          //value of an attack is the expected gold-adjusted damage inflicted
                          ++range.first;
+DBG_AI << "deleting: " << std::endl;
+
                          delete(bc_);
                      }
                  }
@@ -356,6 +425,10 @@ void lp_ai::buildLPs()
         runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
         DBG_AI << "Finished solving LPs. Took " << runtime_diff_ms << " ms. I now have " << ctk_lps.size() << " ctk LPs." << std::endl;
 }
+
+// *********************************************************************************************************************************************
+// END LP_AI
+// *********************************************************************************************************************************************
 
 // ======== Test ai's to visiualize LP output ===========
 

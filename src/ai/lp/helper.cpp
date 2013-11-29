@@ -107,12 +107,10 @@ void ctkLP::insert(map_location src, map_location dst)
         temp = *(range.first->second);                                                                              \
         assert(0 < temp);                                                                                           \
         assert(temp <= Ncol);                                                                                       \
-        DBG_AI << "to_die.push(" << temp << ");" << std::endl;              \
         to_die.push(temp);                                                                                          \
     }                                                                                                               \
     while (!to_die.empty())                                                                                         \
     {                                                                                                               \
-        DBG_AI << "delete_col(" << to_die.top() << ");" << std::endl;       \
         lp->delete_col(to_die.top());                                                                               \
         cols.remove(to_die.top()); \
         to_die.pop();                                                                                               \
@@ -127,6 +125,8 @@ void ctkLP::insert(map_location src, map_location dst)
     DBG_AI << "postcondition has Ncol = " << Ncol << " and temp = " << temp << " and lp->end() = " << lp->end() << std::endl; \
     assert(Ncol == temp);                                                                                           \
 }
+//        DBG_AI << "to_die.push(" << temp << ");" << std::endl;              \
+//        DBG_AI << "delete_col(" << to_die.top() << ");" << std::endl;       \
 
 //    for (range = X ## Map.equal_range(loc); range.first != range.second; ++range.first)                             \
     {                                                                                                               \

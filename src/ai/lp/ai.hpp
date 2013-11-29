@@ -79,6 +79,7 @@ private:
 
         std::map<map_location,pathfind::paths> possible_moves;
         move_map srcdst, dstsrc;
+	unit_map * units_;
 
         void buildLPs();
 };
