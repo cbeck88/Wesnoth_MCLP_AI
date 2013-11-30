@@ -48,7 +48,7 @@ if [ $# -ge 2 ]; then
    FINAL=$FINAL.ai$2
    if [ $2 != -2 ]; then
       ./SetAiController $AI1 ../ai-cfg/lp_$2_ai.cfg $SOURCE_FILE ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
-      if [$2 == 4]; then
+      if [ $2 == 4 ]; then
          LOG_OPTIONS="--log-info=ai/mod,ai/general "
       fi
    else
@@ -60,7 +60,7 @@ if [ $# -ge 2 ]; then
       FINAL=$FINAL.ai$3
       if [ $3 != -2 ]; then
          ./SetAiController $AI2 ../ai-cfg/lp_$3_a3.cfg ~/.local/share/wesnoth/1.11/saves/$OLDFINAL.gz ~/.local/share/wesnoth/1.11/saves/$FINAL.gz
-         if [$3 == 4]; then
+         if [ $3 == 4 ]; then
             LOG_OPTIONS="--log-info=ai/mod,ai/general "
          fi
       else
@@ -76,7 +76,7 @@ rm *.lp
 echo "Launching Wesnoth"
 
 OPTIONS="--data-dir ../../../wesnoth-old/ --load $FINAL.gz "
-OPTIONS+=LOG_OPTIONS
+OPTIONS+=$LOG_OPTIONS
 OPTIONS+=" ${@:4}"
 echo "OPTIONS: "
 echo $OPTIONS
