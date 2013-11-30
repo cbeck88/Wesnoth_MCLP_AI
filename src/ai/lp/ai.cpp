@@ -385,8 +385,8 @@ void lp_ai::find_best_moves()
 
         current_opt = -100000;
 
-        DBG_AI << "New Best Moves List: writing to best.lp" << std::endl;
-        best->second.first->write_lp((char*)"best.lp");
+        //DBG_AI << "New Best Moves List: writing to best.lp" << std::endl;
+        //best->second.first->write_lp((char*)"best.lp");
         get_adjacent_tiles(best_target,adjacent_tiles);
         for(size_t n = 0; n != 6; ++n) {
             range = dstsrc.equal_range(adjacent_tiles[n]);
@@ -513,17 +513,17 @@ void mclp_ai::play_turn()
                          const map_location& dst = range.first->first;
                          const map_location& src = range.first->second;         
                          //columns numbered from 1 in lib lp_solve
-                         DBG_AI << "MCLP_AI Scoring: " << src << " -> " << dst << " \\> " << i->get_location() << std::endl;
+                         LOG_AI << "MCLP_AI Scoring: " << src << " -> " << dst << " \\> " << i->get_location() << std::endl;
                          this_opt = mc_score(src,dst, i->get_location(), 10);
-                         DBG_AI << "score = "  << this_opt << std::endl;
+                         LOG_AI << "score = "  << this_opt << std::endl;
 
                          if (this_opt > current_opt)
                          {
-                             DBG_AI << "***found a new best move: " << src << " -> " << dst << " \\> " << best_target << std::endl; 
+                             LOG_AI << "***found a new best move: " << src << " -> " << dst << " \\> " << best_target << std::endl; 
                              current_opt = this_opt; best_src = src; best_dst = dst;
                          }
                          else {
-                             DBG_AI << "not as good..."<< std::endl;
+                             LOG_AI << "not as good..."<< std::endl;
                          }
                          ++range.first;
                      }
@@ -536,9 +536,8 @@ void mclp_ai::play_turn()
             if (mr->is_ok()) {
                 attack_result_ptr ar = execute_attack_action(best_dst,best_target,-1);
                 if(ar->is_ok()) { 
-                    DBG_AI << "All is clear, now tail recursing." << std::endl;
-                    buildLPs();
-                    find_best_moves();
+                    LOG_AI << "All is clear, now tail recursing." << std::endl;
+                    play_turn();
                 } 
                 else {
                     ERR_AI << "Attack Error of some kind " << ar << std::endl;
@@ -549,16 +548,20 @@ void mclp_ai::play_turn()
             }
         } 
         else {
-            DBG_AI << "No moves found of any quality, ending turn. " << std::endl;
+            LOG_AI << "No moves found of any quality, ending turn. " << std::endl;
         }
 }
 
+//Todo: make a video locker separately from this function in case we call the function many times.
 REAL mclp_ai::mc_score(const map_location src = map_location::null_location, const map_location dst = map_location::null_location, const map_location target = map_location::null_location, const int repetitions = 1)
 {
         if (repetitions < 1) { return 0; }
-        boost::shared_ptr<unit_map> backup (new unit_map(*resources::units));
+        unit_map * backup = new unit_map(*resources::units);
+        std::swap(backup, resources::units); //resources::units points to the new one
 
         REAL score = 0;
+
+        update_locker lock_update(resources::screen->video());
 
         for (int cnt = 0; cnt < repetitions; cnt++) {
             if ((src != map_location::null_location) && (dst != map_location::null_location)) {
@@ -567,7 +570,7 @@ REAL mclp_ai::mc_score(const map_location src = map_location::null_location, con
                     if (target != map_location::null_location) {
                         attack_result_ptr ar = execute_attack_action(dst,target,-1);
                         if(ar->is_ok()) {
-                            DBG_AI << "All is clear, now tail recursing." << std::endl;
+                            //DBG_AI << "All is clear, now tail recursing." << std::endl;
                             buildLPs();
                             find_best_moves();
                         } 
@@ -596,6 +599,8 @@ REAL mclp_ai::mc_score(const map_location src = map_location::null_location, con
 
             *resources::units = *(new unit_map(*backup));
         }
+        std::swap(backup, resources::units); //resources::units points back to where it should
+        delete(backup);
         return score/repetitions;
 }
 
