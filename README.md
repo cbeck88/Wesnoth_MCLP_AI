@@ -8,7 +8,7 @@ During these monte carlo simulations, all parties will be controlled by an effic
 to kill as much gold as possible in its turn. To do this, it solves a series of linear programs related to the game
 state, hopefully very quickly. The linear programs seek to approximately determine
 
-1. What is the enemy unit that is easiest for me to kill?
+1. Which enemy unit is easiest for me to kill?
 
 2. What is the opportunity cost of attacking with a particular unit?
 
