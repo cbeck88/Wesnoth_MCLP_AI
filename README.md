@@ -128,7 +128,7 @@ In _/wesnoth-old/src/SConscript_: Add my source .cpp files
          ai/lua/unit_advancements_aspect.cpp
          
          
-to the list of wesnoth sources, with the other ai.cpp files, to get scons to build it.
+to the list of wesnoth sources, with the other ai.cpp files, to get scons to build it. (note: this is out of date, there are more cpp files now)
 
 In _/wesnoth-old/SConstruct_: Add my required libraries so that they are checked and statically linked.
 
