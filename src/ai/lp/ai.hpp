@@ -63,16 +63,19 @@ class lp_ai : public ai_composite {
 public:
         lp_ai(default_ai_context &context, const config& cfg); //:ai_composite(context, cfg), temp_lp(NULL), ctk_lps(), dmg_lp(NULL) { }
 
-        void new_turn();
-        void play_turn();
-        void switch_side(side_number side);
-        std::string describe_self() const;
-        void on_create();
+        virtual void new_turn();
+        virtual void play_turn();
+        virtual void switch_side(side_number side);
+        virtual std::string describe_self() const;
+        virtual void on_create();
 
 	virtual config to_config() const;
 
+        void buildLPs();
+        void find_best_moves();
+
 private:
-        boost::shared_ptr<ctkLP> temp_lp;
+//        boost::shared_ptr<ctkLP> temp_lp;
         typedef std::pair< boost::shared_ptr<ctkLP> , ctkLP::iterator  > ctk_pod;
         std::map<const map_location, ctk_pod > ctk_lps;
         boost::shared_ptr<damageLP> dmg_lp;
@@ -80,8 +83,21 @@ private:
         std::map<map_location,pathfind::paths> possible_moves;
         move_map srcdst, dstsrc;
 	unit_map * units_;
+};
 
-        void buildLPs();
+class mclp_ai : public lp_ai {
+public:
+        mclp_ai(default_ai_context &context, const config& cfg);
+
+        void new_turn();
+        void play_turn();
+        void switch_side(side_number side);
+        std::string describe_self() const;
+        void on_create();
+
+        config to_config() const;
+
+        REAL mc_score( const map_location , const map_location , const map_location , const int );
 };
 
 /** A test to visualize the output of first LP we solve. */

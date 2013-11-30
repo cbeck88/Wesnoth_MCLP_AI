@@ -147,7 +147,7 @@ void ctkLP::outputMapsAndCols()
 
 #define remove_X(X) remove_ ## X (const map_location loc)                                                           \
 {                                                                                                                   \
-    DBG_AI << "called remove_" << #X << std::endl;                                                                     \
+    DBG_AI << "called remove_" << #X << " !! NOTE: THIS IS BUGGED RIGHT NOW AND NEEDS A REDISGN " << std::endl;     \
     DBG_AI << "Ncol = " << Ncol << " , lp->end() = " << lp->end() << std::endl;\
     typedef std::multimap<const map_location, col_ptr>::iterator map_itor; \
     map_itor it;\

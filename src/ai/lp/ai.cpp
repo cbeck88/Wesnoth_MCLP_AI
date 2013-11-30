@@ -92,120 +92,9 @@ void lp_ai::switch_side(side_number side)
 void lp_ai::play_turn()
 {
         buildLPs();
-
-        boost::shared_ptr<damageLP> templp;
-	//game_events::fire("ai turn");
-        LOG_AI << "lp_ai play turn. have " << ctk_lps.size() << " ctk LPs." << std::endl;
-
-        if (ctk_lps.size() == 0) { DBG_AI << " no ctk_lps, hence no moves. exiting. "<< std::endl; return ;}
-
-        clock_t c0 = clock();
-
-        map_location adjacent_tiles[6];
-        std::pair<Itor,Itor> range;
-
-        REAL current_opt = (REAL) -1000000;
-        REAL this_opt;
-        map_location best_target;
-        std::map< const map_location, ctk_pod >::iterator best = ctk_lps.begin();
-
-        fwd_ptr j;
-        std::map<const map_location, ctk_pod >::iterator k;
-       
-        for (k = ctk_lps.begin(); k != ctk_lps.end(); ++k) {
-#ifdef MCLP_DEBUG
-            DBG_AI << "Got a ctk_lp. MCLP_DEBUG ON" << std::endl;
-#else
-            DBG_AI << "Got a ctk_lp. MCLP_DEBUG OFF" << std::endl;
-#endif    
-            this_opt = k->second.first->get_obj();
-//#ifdef MCLP_DEBUG
-            DBG_AI << "Current Opt = " << current_opt << std::endl;
-            DBG_AI << "This Opt = " << this_opt << std::endl;
-//#endif
-            if (this_opt > current_opt) {
-//#ifdef MCLP_DEBUG
-                 DBG_AI << "Found new best attack! :" << k->second.first->defender << std::endl;
-//#endif
-                 best = k;
-                 current_opt = this_opt;
-
-                 DBG_AI << "Reality check: best defender = " << best->second.first->defender << " , value = " << best->second.first->get_obj() << std::endl;
-            }
-//#ifdef MCLP_DEBUG
-            else {
-                 DBG_AI << "Not as good."<< std::endl;
-                 DBG_AI << "Reality check: best defender = " << best->second.first->defender << " , value = " << best->second.first->get_obj() << std::endl;
-            }
-//#endif
-        }
-                
-        j = best->second.first->begin();
-        best_target = best->second.first->defender;
-
-        map_location best_src, best_dst;
-        current_opt = -100000;
-
-        DBG_AI << "New Best Moves List: writing to best.lp" << std::endl;
-        best->second.first->write_lp((char*)"best.lp");
-        get_adjacent_tiles(best_target,adjacent_tiles);
-        for(size_t n = 0; n != 6; ++n) {
-            range = dstsrc.equal_range(adjacent_tiles[n]);
-            while(range.first != range.second) {
-                const map_location& dst = range.first->first;
-                const map_location& src = range.first->second;         
-                //y = xt, so divide by t which is in row[Ncol]. if this is > 0 then move.
-
-                if (best->second.first->var_gtr(j,.1)) {//((row[j++]/row[Ncol]) > .01) { 
-                    DBG_AI << "CTK LP Value" << (REAL)(best->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target << "**" << std::endl; 
-                    //templp.reset(new damageLP(*dmg_lp));
-                    //templp->remove_unit(src);
-                    //templp->remove_slot(dst);
-                    //templp->solve();
-                    //this_opt = templp->get_obj();
-                    this_opt = dmg_lp->get_obj_without(src, dst);
-                    if (this_opt > current_opt)
-                    {
-                        DBG_AI << "***found a new best move: " << src << " -> " << dst << " \\> " << best_target << std::endl; 
-                        current_opt = this_opt; best_src = src; best_dst = dst;
-                    }
-                    else {
-                        DBG_AI << "not as good..."<< std::endl;
-                    }
-//                    move_result_ptr mr = execute_move_action(src, dst); //best_moves_list.push_back(std::make_pair<map_location, map_location> (src, dst));
-//                    attack_result_ptr ar = execute_attack_action(dst, best_target,-1);
-                } else //{execute_move_action(src, dst, false, true);}
-                {DBG_AI << "Value" << (REAL)(best->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target << std::endl;} 
-                ++range.first;
-                ++j;
-            }
-        }        
-        DBG_AI << "End of list." << std::endl;
-        clock_t c1 = clock();        
-        double runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
-        DBG_AI << "Finish lp_ai::play_turn(), took "<< runtime_diff_ms << " ms." << std::endl;
-
-//        if (current_opt > 1) {
-        if (current_opt > -100000) {
-            move_result_ptr mr = execute_move_action(best_src,best_dst);
-            if (mr->is_ok()) {
-                attack_result_ptr ar = execute_attack_action(best_dst,best_target,-1);
-                if(ar->is_ok()) { 
-                    DBG_AI << "All is clear, now tail recursing." << std::endl;
-                    play_turn();
-                } 
-                else {
-                    ERR_AI << "Attack Error of some kind " << ar << std::endl;
-                }
-            } 
-            else {
-            ERR_AI << "Move Error of some kind " << mr << std::endl;
-            }
-        } 
-        else {
-            DBG_AI << "No moves found of any quality, ending turn. " << std::endl;
-        }
+        find_best_moves();
 }
+
 
 //***************************************************** build LPs ************************************************
 
@@ -213,7 +102,7 @@ void lp_ai::buildLPs()
 {
         DBG_AI << "lp_ai::buildLPs();" <<std::endl;
 //#ifdef MCLP_FILEOUT
-        char cstr[40];
+        char cstr[80];
 #ifdef MCLP_FILEOUT
         char file_name[20];
         int file_counter = -1; //damage lp is 0
@@ -329,7 +218,7 @@ void lp_ai::buildLPs()
                          //these are dst and src for the attacking unit
                          const unit_map::const_iterator un = units_->find(src);
 
-                         assert(un != units_->end()); //this assertion was failing and i'm not sure why.
+                         assert(un != units_->end()); //this assertion was failing and i'm not sure why. @@fixed.
                          range.first++;
                      }
                  }
@@ -374,7 +263,6 @@ void lp_ai::buildLPs()
                          const battle_context_unit_stats a = bc_->get_attacker_stats();
 
 //DBG_AI << "fight: " << std::endl;
-
                          //This code later in attack::perform() in attack.cpp
                          combatant attacker(bc_->get_attacker_stats());
                          combatant defender(bc_->get_defender_stats());
@@ -440,9 +328,281 @@ void lp_ai::buildLPs()
         DBG_AI << "Finished solving LPs. Took " << runtime_diff_ms << " ms. I now have " << ctk_lps.size() << " ctk LPs." << std::endl;
 }
 
+// *************************************** find_best_moves ********************************************
+
+void lp_ai::find_best_moves()
+{
+        boost::shared_ptr<damageLP> templp;
+	//game_events::fire("ai turn");
+        LOG_AI << "lp_ai play turn. have " << ctk_lps.size() << " ctk LPs." << std::endl;
+
+        if (ctk_lps.size() == 0) { DBG_AI << " no ctk_lps, hence no moves. exiting. "<< std::endl; return ;}
+
+        clock_t c0 = clock();
+
+        map_location adjacent_tiles[6];
+        std::pair<Itor,Itor> range;
+
+        REAL current_opt = (REAL) -1000000;
+        REAL this_opt;
+        map_location best_src, best_dst;
+        map_location best_target;
+        std::map< const map_location, ctk_pod >::iterator best = ctk_lps.begin();
+
+        fwd_ptr j;
+        std::map<const map_location, ctk_pod >::iterator k;
+       
+        for (k = ctk_lps.begin(); k != ctk_lps.end(); ++k) {
+#ifdef MCLP_DEBUG
+            DBG_AI << "Got a ctk_lp. MCLP_DEBUG ON" << std::endl;
+#else
+            DBG_AI << "Got a ctk_lp. MCLP_DEBUG OFF" << std::endl;
+#endif    
+            this_opt = k->second.first->get_obj();
+//#ifdef MCLP_DEBUG
+            DBG_AI << "Current Opt = " << current_opt << std::endl;
+            DBG_AI << "This Opt = " << this_opt << std::endl;
+//#endif
+            if (this_opt > current_opt) {
+//#ifdef MCLP_DEBUG
+                 DBG_AI << "Found new best attack! :" << k->second.first->defender << std::endl;
+//#endif
+                 best = k;
+                 current_opt = this_opt;
+
+                 DBG_AI << "Reality check: best defender = " << best->second.first->defender << " , value = " << best->second.first->get_obj() << std::endl;
+            }
+//#ifdef MCLP_DEBUG
+            else {
+                 DBG_AI << "Not as good."<< std::endl;
+                 DBG_AI << "Reality check: best defender = " << best->second.first->defender << " , value = " << best->second.first->get_obj() << std::endl;
+            }
+//#endif
+        }
+                
+        j = best->second.first->begin();
+        best_target = best->second.first->defender;
+
+        current_opt = -100000;
+
+        DBG_AI << "New Best Moves List: writing to best.lp" << std::endl;
+        best->second.first->write_lp((char*)"best.lp");
+        get_adjacent_tiles(best_target,adjacent_tiles);
+        for(size_t n = 0; n != 6; ++n) {
+            range = dstsrc.equal_range(adjacent_tiles[n]);
+            while(range.first != range.second) {
+                const map_location& dst = range.first->first;
+                const map_location& src = range.first->second;         
+                //y = xt, so divide by t which is in row[Ncol]. if this is > 0 then move.
+
+                if (best->second.first->var_gtr(j,.1)) {//((row[j++]/row[Ncol]) > .01) { 
+                    DBG_AI << "CTK LP Value" << (REAL)(best->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target << "**" << std::endl; 
+                    //templp.reset(new damageLP(*dmg_lp));
+                    //templp->remove_unit(src);
+                    //templp->remove_slot(dst);
+                    //templp->solve();
+                    //this_opt = templp->get_obj();
+                    this_opt = dmg_lp->get_obj_without(src, dst);
+                    if (this_opt > current_opt)
+                    {
+                        DBG_AI << "***found a new best move: " << src << " -> " << dst << " \\> " << best_target << std::endl; 
+                        current_opt = this_opt; best_src = src; best_dst = dst;
+                    }
+                    else {
+                        DBG_AI << "not as good..."<< std::endl;
+                    }
+//                    move_result_ptr mr = execute_move_action(src, dst); //best_moves_list.push_back(std::make_pair<map_location, map_location> (src, dst));
+//                    attack_result_ptr ar = execute_attack_action(dst, best_target,-1);
+                } else //{execute_move_action(src, dst, false, true);}
+                {DBG_AI << "Value" << (REAL)(best->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target << std::endl;} 
+                ++range.first;
+                ++j;
+            }
+        }        
+        DBG_AI << "End of list." << std::endl;
+        clock_t c1 = clock();        
+        double runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
+        DBG_AI << "Finish lp_ai::play_turn(), took "<< runtime_diff_ms << " ms." << std::endl;
+
+//        if (current_opt > 1) {
+        if (current_opt > -100000) {
+            move_result_ptr mr = execute_move_action(best_src,best_dst);
+            if (mr->is_ok()) {
+                attack_result_ptr ar = execute_attack_action(best_dst,best_target,-1);
+                if(ar->is_ok()) { 
+                    DBG_AI << "All is clear, now tail recursing." << std::endl;
+                    buildLPs();
+                    find_best_moves();
+                } 
+                else {
+                    ERR_AI << "Attack Error of some kind " << ar << std::endl;
+                }
+            } 
+            else {
+                ERR_AI << "Move Error of some kind " << mr << std::endl;
+            }
+        } 
+        else {
+            DBG_AI << "No moves found of any quality, ending turn. " << std::endl;
+        }
+}
+
+
 // *********************************************************************************************************************************************
 // END LP_AI
 // *********************************************************************************************************************************************
+
+// *********************************************************************************************************************************************
+// BEGIN MCLP_AI
+// *********************************************************************************************************************************************
+
+mclp_ai::mclp_ai(default_ai_context &context, const config& cfg):lp_ai(context, cfg) { }
+
+std::string mclp_ai::describe_self() const
+{
+	return "[mclp_ai]";
+}
+
+void mclp_ai::on_create()
+{
+        LOG_AI << "creating an mclp_ai" << std::endl;
+}
+
+void mclp_ai::new_turn()
+{
+        LOG_AI << "mclp_ai new turn" << std::endl;
+}
+
+void mclp_ai::switch_side(side_number side)
+{
+        LOG_AI << "mclp_ai new side: " << side << std::endl;
+}
+
+config mclp_ai::to_config() const
+{
+	config cfg;
+	cfg["ai_algorithm"]= "mclp_ai";
+	return cfg;
+}
+
+void mclp_ai::play_turn()
+{
+        LOG_AI << "mclp_ai play turn" << std::endl;
+
+        std::map<map_location,pathfind::paths> possible_moves;
+        move_map srcdst, dstsrc;
+        calculate_possible_moves(possible_moves,srcdst,dstsrc,false);
+
+	unit_map& units_ = *resources::units;
+
+        std::pair<Itor,Itor> range;
+
+        map_location adjacent_tiles[6];
+        REAL current_opt = (REAL) -1000000;
+        REAL this_opt;
+        map_location best_src, best_dst;
+        map_location best_target;
+
+        for(unit_map::iterator i = units_.begin(); i != units_.end(); ++i) {
+            if(current_team().is_enemy(i->side()) && !i->incapacitated()) {        
+                 get_adjacent_tiles(i->get_location(),adjacent_tiles);
+                 for(size_t n = 0; n != 6; ++n) {
+                     range = dstsrc.equal_range(adjacent_tiles[n]);
+                     //adjacent_tiles[n] is the attacker dest hex, i->first is the defender hex
+                     while(range.first != range.second) {
+                         const map_location& dst = range.first->first;
+                         const map_location& src = range.first->second;         
+                         //columns numbered from 1 in lib lp_solve
+                         DBG_AI << "MCLP_AI Scoring: " << src << " -> " << dst << " \\> " << i->get_location() << std::endl;
+                         this_opt = mc_score(src,dst, i->get_location(), 10);
+                         DBG_AI << "score = "  << this_opt << std::endl;
+
+                         if (this_opt > current_opt)
+                         {
+                             DBG_AI << "***found a new best move: " << src << " -> " << dst << " \\> " << best_target << std::endl; 
+                             current_opt = this_opt; best_src = src; best_dst = dst;
+                         }
+                         else {
+                             DBG_AI << "not as good..."<< std::endl;
+                         }
+                         ++range.first;
+                     }
+                 }
+            }
+        }
+
+        if (current_opt > -100000) {
+            move_result_ptr mr = execute_move_action(best_src,best_dst);
+            if (mr->is_ok()) {
+                attack_result_ptr ar = execute_attack_action(best_dst,best_target,-1);
+                if(ar->is_ok()) { 
+                    DBG_AI << "All is clear, now tail recursing." << std::endl;
+                    buildLPs();
+                    find_best_moves();
+                } 
+                else {
+                    ERR_AI << "Attack Error of some kind " << ar << std::endl;
+                }
+            } 
+            else {
+                ERR_AI << "Move Error of some kind " << mr << std::endl;
+            }
+        } 
+        else {
+            DBG_AI << "No moves found of any quality, ending turn. " << std::endl;
+        }
+}
+
+REAL mclp_ai::mc_score(const map_location src = map_location::null_location, const map_location dst = map_location::null_location, const map_location target = map_location::null_location, const int repetitions = 1)
+{
+        if (repetitions < 1) { return 0; }
+        boost::shared_ptr<unit_map> backup (new unit_map(*resources::units));
+
+        REAL score = 0;
+
+        for (int cnt = 0; cnt < repetitions; cnt++) {
+            if ((src != map_location::null_location) && (dst != map_location::null_location)) {
+                move_result_ptr mr = execute_move_action(src,dst);
+                if (mr->is_ok()) {
+                    if (target != map_location::null_location) {
+                        attack_result_ptr ar = execute_attack_action(dst,target,-1);
+                        if(ar->is_ok()) {
+                            DBG_AI << "All is clear, now tail recursing." << std::endl;
+                            buildLPs();
+                            find_best_moves();
+                        } 
+                        else {
+                            ERR_AI << "Attack Error of some kind " << ar << std::endl;
+                        }
+                    }
+                } 
+                else {
+                    ERR_AI << "Move Error of some kind " << mr << std::endl;
+                }
+            }
+             
+            buildLPs();
+            find_best_moves();
+
+            for (unit_map::iterator i = resources::units->begin(); i != resources::units->end(); i++) {
+                 if(!i->incapacitated()) {
+                     if(current_team().is_enemy(i->side())) {
+                        score -= i->cost() * i->hitpoints() / i->max_hitpoints();
+                     } else {
+                        score += i->cost() * i->hitpoints() / i->max_hitpoints();
+                     }
+                 }
+            }
+
+            *resources::units = *(new unit_map(*backup));
+        }
+        return score/repetitions;
+}
+
+// *********************************************************************************************************************************************
+// END MCLP_AI
+// *********************************************************************************************************************************************
+
 
 // ======== Test ai's to visiualize LP output ===========
 
