@@ -92,6 +92,9 @@ void holder::init( side_number side )
                 else if (cfg_["ai_algorithm"] == "lp_ai") {
                     ai_ = boost::shared_ptr<ai_composite>(new lp_ai(*default_ai_context_, cfg_));
                 }
+                else if (cfg_["ai_algorithm"] == "mclp_ai") {
+                    ai_ = boost::shared_ptr<ai_composite>(new mclp_ai(*default_ai_context_, cfg_));
+                }
 		else {
                     ai_ = boost::shared_ptr<ai_composite>(new ai_composite(*default_ai_context_,cfg_));
                 }
