@@ -16,8 +16,7 @@ The LP_ai heuristic is to *attack the unit which can be most easily killed using
 unit from the optimal solution which is otherwise the least useful first*. After we see if we got our hits, 
 reevaluate the same way.
 
-The MCLP_ai is not written yet, but this is the one which is planned to use the results of MC simulations to make 
-decisions.
+The MCLP_ai scores moves on the basis of monte carlo experiments with LP_ai as the controller.
 
 Current AIs
 -----------
@@ -37,14 +36,12 @@ Both of these are just tools to visualize the results of these LPs for further t
 **lp_ai**: A helper ai using the lps tested in lp_ai_1, lp_ai_2, which seeks to execute turn as aggressively 
 as possible, using maximum slot efficiency. In a preliminary state.
 
+**mclp_ai**: Uses lp_ai in monte carlo simulations. In a preliminary state.
+
+
 *These ais will not recruit or grab villages.* 
 You should load them from a savegame file which is already set up for an attack. This is most easily done using the tools in testsaves/.
 
-
-Future AIs
-----------
-
-**mclp_ai**: Will use lp_ai in monte carlo simulations.
 
 Other
 -----
