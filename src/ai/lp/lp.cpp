@@ -17,7 +17,7 @@ REAL FracLP::shortrow[] = {1,-1};
 
 LP::LP(int n): Ncol(n),lp(NULL),vars(NULL)
 {
-    DBG_AI << "LP::LP();" << std::endl;
+//    DBG_AI << "LP::LP();" << std::endl;
     lp = lp_solve::make_lp(0,n);
     assert(lp != NULL);
 
@@ -54,9 +54,9 @@ FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
 
 
     //lp_solve::set_add_rowmode(lp, LP_SOLVE_TRUE);
-#ifdef MCLP_DEBUG
+//#ifdef MCLP_FILEOUT
     lp_solve::set_col_name(lp, n+1, (char *)"t");
-#endif
+//#endif
 
 //    DBG_AI << "set Ncol+1" << (Ncol+1) << ", here's GETLOWBO:" << std::endl;
 //    SPAM_GET_LOWBO
@@ -133,7 +133,7 @@ unsigned char LP::finishRows()
 //#ifdef MCLP_DEBUG
     if (lp_solve::is_add_rowmode(lp) == LP_SOLVE_FALSE)
     {
-        DBG_AI << "LP::finishRows already had rowmode false... returning." << std::endl;
+ //       DBG_AI << "LP::finishRows already had rowmode false... returning." << std::endl;
         return LP_SOLVE_TRUE;
     }
 //#endif
@@ -150,7 +150,7 @@ unsigned char LP::solve()
     lp_solve::set_verbose(lp, LP_SOLVE_LOG_MODE);
 
     if (lp_solve::is_add_rowmode(lp) == LP_SOLVE_TRUE) {
-        DBG_AI << "LP::solve Hmm add row mode is on for some reason... turning off." << std::endl;
+//        DBG_AI << "LP::solve Hmm add row mode is on for some reason... turning off." << std::endl;
         if (lp_solve::set_add_rowmode(lp,LP_SOLVE_FALSE) != LP_SOLVE_TRUE) {
             ERR_AI << "LP::solve failed to set rowmode to false" << std::endl; 
             return LP_SOLVE_FALSE;
@@ -174,7 +174,7 @@ unsigned char FracLP::finishRows()
 //#ifdef MCLP_DEBUG
     if (lp_solve::is_add_rowmode(lp) == LP_SOLVE_FALSE)
     {
-        DBG_AI << "FracLP::finishRows already had rowmode false... returning." << std::endl;
+//        DBG_AI << "FracLP::finishRows already had rowmode false... returning." << std::endl;
         return LP_SOLVE_TRUE;
     }
 //#endif
@@ -188,7 +188,7 @@ unsigned char FracLP::finishRows()
 
 unsigned char FracLP::solve()
 {
-    DBG_AI << "FracLP::solve()'ing." << std::endl;
+//    DBG_AI << "FracLP::solve()'ing." << std::endl;
 
 //    DBG_AI << "Ncol = " << Ncol << std::endl;
 //    DBG_AI << "here's GETLOWBO:" << std::endl;
@@ -201,13 +201,13 @@ unsigned char FracLP::solve()
     lp_solve::set_lowbo(lp, Ncol+1, (REAL) 0.0);
 #endif
 
-#ifdef MCLP_DEBUG
-    DBG_AI << "About to commit denom_row:" << std::endl;
+//#ifdef MCLP_DEBUG
+    DBG_AI << "About to commit denom_row: Ncol = " << Ncol << std::endl;
     for(int i =1; i <= Ncol+1; i++)
     { 
         DBG_AI << "denom_row["<< i << "]=" << denom_row[i] << std::endl;
     }
-#endif
+//#endif
 
     if (lp_solve::add_constraintex(lp, Ncol+1,denom_row,NULL, LP_SOLVE_EQ, 1) != LP_SOLVE_TRUE) {
         ERR_AI << "FracLP::solve() failed to add denominator constraint" << std::endl; 
@@ -228,10 +228,15 @@ unsigned char FracLP::solve()
 
     lp_solve::set_maxim(lp);
     lp_solve::set_verbose(lp, LP_SOLVE_LOG_MODE);
+    //lp_solve::set_scaling(lp, LP_SOLVE_SCALE_NONE);
 
     unsigned char ret = lp_solve::solve(lp);
     if (ret != LP_SOLVE_OPTIMAL) {
-        ERR_AI << "FracLP::solve() solve gave an error code " << ret << std::endl;
+        ERR_AI << "FracLP::solve() solve gave an error code " << ret  << "= \"" << lp_solve::SOLVE_CODE(ret) << "\". Full debugging:" << std::endl;
+        lp_solve::set_verbose(lp, LP_SOLVE_FULL);
+        lp_solve::solve(lp);
+        ERR_AI << "FracLP::solve() writing to err.lp" << std::endl;
+        lp_solve::write_lp(lp,"err.lp");
     }
 
     if (lp_solve::get_variables(lp,denom_row) != LP_SOLVE_TRUE) {
@@ -264,9 +269,9 @@ unsigned char FracLP::set_obj_num_constant(REAL val)
 
 unsigned char FracLP::set_obj_denom(int col, REAL val)
 {
-//    DBG_AI << "denom_row[" << col << "]=" << val << std::endl;
+    DBG_AI << "denom_row[" << col << "]=" << val << std::endl;
 //    DBG_AI << "denom_row[end]=" << denom_row[Ncol] << std::endl;
-    denom_row[col] = val;
+    denom_row[col] = val; //why do I have to do this?
     return LP_SOLVE_TRUE;
 }
 

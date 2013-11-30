@@ -32,6 +32,7 @@ namespace lp_solve
         unsigned char del_column(lprec*,int);
         void set_maxim(lprec*);
         void set_minim(lprec*);
+        void set_scaling(lprec*, int);
         void set_verbose(lprec*, int);
         int solve(lprec*);
         unsigned char get_variables(lprec*, REAL*);
@@ -63,6 +64,14 @@ namespace lp_solve
 #define LP_SOLVE_NORMAL 4    //int NORMAL = 4;
 #define LP_SOLVE_DETAILED 5  //int DETAILED = 5;
 #define LP_SOLVE_FULL 6      //int FULL = 6;
+
+//codes for SET_SCALING
+#define LP_SOLVE_SCALE_NONE 0
+#define LP_SOLVE_SCALE_EXTREME 1
+#define LP_SOLVE_SCALE_RANGE 2
+#define LP_SOLVE_SCALE_MEAN 3
+#define LP_SOLVE_SCALE_GEOMETRIC 4
+#define LP_SOLVE_SCALE_CURTISREID 5
 
 //codes for SOLVE
 #define LP_SOLVE_NOMEMORY  -2//int NOMEMORY = -2;

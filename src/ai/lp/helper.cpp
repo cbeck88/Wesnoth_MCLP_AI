@@ -77,9 +77,9 @@ void damageLP::insert( const map_location src, const map_location dst, map_locat
 
 void ctkLP::insert(map_location src, map_location dst)
 {
-#ifdef MCLP_DEBUG
-    DBG_AI << "ctkLP::insert Ncol = " << Ncol << std::endl;
-#endif
+//#ifdef MCLP_DEBUG
+    DBG_AI << "ctkLP::insert Ncol = " << Ncol << " *cols.begin() = " << *(cols.begin()) << std::endl;
+//#endif
     if (lp) {
        ERR_AI << "ERROR: Tried to insert to a ctkLP after makelp." << std::endl;
        return;
@@ -120,7 +120,8 @@ void ctkLP::outputMapsAndCols()
 {
 //    std::stringstream s;
 //    s = DBG_AI;
-/*    DBG_AI << "Output maps and cols:" << std::endl;
+    return;
+    DBG_AI << "Output maps and cols:" << std::endl;
     typedef std::multimap<const map_location, col_ptr>::iterator map_itor;
     map_itor it1,it2;
     bool done = true;
@@ -139,7 +140,7 @@ void ctkLP::outputMapsAndCols()
         { DBG_AI << it2->first << ": " << *(it2->second) << "\n"; it2++; done = false;}   
         else 
         {DBG_AI << "      " << ": " << "  " << "\n";}
-    }                                */                                                                               
+    }                               
 //    DBG_AI << s.str() << std::endl;
 }   
 
@@ -190,7 +191,7 @@ void ctkLP::outputMapsAndCols()
     }                                                                                                               \
     assert(Ncol == temp);                                                                                           \
 }
-//        DBG_AI << "delete_col(" << to_die.top() << ");" << std::endl;       \
+/*        DBG_AI << "delete_col(" << to_die.top() << ");" << std::endl;       \
 
 //    for (range = X ## Map.equal_range(loc); range.first != range.second; ++range.first)                             \
     {                                                                                                               \
@@ -199,7 +200,7 @@ void ctkLP::outputMapsAndCols()
         cols.erase(range.first->second);                                                                            \
     DBG_AI << "finished erasing: cols.size = " << cols.size()  << std::endl;\
     }                                                                                                               \
-
+*/
     //If the return of equal range were guaranteed to be sorted wrt value we could use this:                        
     //But according to standard we cannot so we throw in a heap first ><
     //

@@ -87,6 +87,7 @@ void lp_ai::switch_side(side_number side)
         LOG_AI << "lp_ai new side: " << side << std::endl;
 }
 
+// ******************************************** play turn ********************************************
 
 void lp_ai::play_turn()
 {
@@ -94,7 +95,9 @@ void lp_ai::play_turn()
 
         boost::shared_ptr<damageLP> templp;
 	//game_events::fire("ai turn");
-        LOG_AI << "lp_ai new turn. have " << ctk_lps.size() << " ctk LPs." << std::endl;
+        LOG_AI << "lp_ai play turn. have " << ctk_lps.size() << " ctk LPs." << std::endl;
+
+        if (ctk_lps.size() == 0) { DBG_AI << " no ctk_lps, hence no moves. exiting. "<< std::endl; return ;}
 
         clock_t c0 = clock();
 
@@ -143,7 +146,8 @@ void lp_ai::play_turn()
         map_location best_src, best_dst;
         current_opt = -100000;
 
-        DBG_AI << "New Best Moves List: *j = " << *j << std::endl;
+        DBG_AI << "New Best Moves List: writing to best.lp" << std::endl;
+        best->second.first->write_lp((char*)"best.lp");
         get_adjacent_tiles(best_target,adjacent_tiles);
         for(size_t n = 0; n != 6; ++n) {
             range = dstsrc.equal_range(adjacent_tiles[n]);
@@ -153,7 +157,7 @@ void lp_ai::play_turn()
                 //y = xt, so divide by t which is in row[Ncol]. if this is > 0 then move.
 
                 if (best->second.first->var_gtr(j,.1)) {//((row[j++]/row[Ncol]) > .01) { 
-                    DBG_AI << "Value" << (REAL)(best->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target << "**" << std::endl; 
+                    DBG_AI << "CTK LP Value" << (REAL)(best->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target << "**" << std::endl; 
                     //templp.reset(new damageLP(*dmg_lp));
                     //templp->remove_unit(src);
                     //templp->remove_slot(dst);
@@ -203,11 +207,14 @@ void lp_ai::play_turn()
         }
 }
 
+//***************************************************** build LPs ************************************************
+
 void lp_ai::buildLPs()
 {
         DBG_AI << "lp_ai::buildLPs();" <<std::endl;
-#ifdef MCLP_FILEOUT
+//#ifdef MCLP_FILEOUT
         char cstr[40];
+#ifdef MCLP_FILEOUT
         char file_name[20];
         int file_counter = -1; //damage lp is 0
 #endif
@@ -276,10 +283,10 @@ void lp_ai::buildLPs()
                          dmg_lp->insert(range.first->second,range.first->first,i->get_location());
                          if (!haveTarget) {
                              current_target.reset(new ctkLP(i->get_location()));
-                             current_target->set_obj_num_constant(-(REAL) i->hitpoints() * 100); // * 100 because CTH is an integer
+                             current_target->set_obj_num_constant(-(REAL) i->hitpoints() ); // * 100 because CTH is an integer
                              current_target->set_obj_denom_constant((REAL) 1);
 
-                             //DBG_AI << "LP_AI: inserting new ctk_lp to ctk_lps" << std::endl;
+                             DBG_AI << "LP_AI: inserting new ctk_lp to ctk_lps. *(current_target->begin()) = " << *(current_target->begin()) << std::endl;
                              ctk_lps.insert(std::make_pair(i->get_location(), std::make_pair(current_target, current_target->begin())));
                              haveTarget = true;
                          }
@@ -303,6 +310,9 @@ void lp_ai::buildLPs()
         {
             k->second.first->make_lp();
             DBG_AI << "LP_AI: Made a ctk_lp" << std::endl;
+
+            k->second.second = k->second.first->begin();
+            DBG_AI << "refreshing ctkLP iterator: *(current_target->begin()) = " << *(current_target->begin()) << std::endl;
         }
         fwd_ptr j=dmg_lp->begin();
 
@@ -351,13 +361,6 @@ void lp_ai::buildLPs()
 
                          assert(un != units_->end()); //this assertion was failing and i'm not sure why.
 
-#ifdef MCLP_FILEOUT
-                         std::stringstream s1,s2,s3;
-                         s1 << src; s2 << dst; s3 << target;
-                         sprintf(cstr, "(%s->%s\\>%s)", s1.str().c_str(), s2.str().c_str(), s3.str().c_str());
-                         dmg_lp->set_col_name(j, cstr);//lp_solve::set_col_name(lp, j, cstr);
-                         k->second.first->set_col_name(k->second.second, cstr);
-#endif
                          //const int chance_to_hit = un->second.defense_modifier(get_info().map,terrain);
                          //This code modified from attack::perform() in attack.cpp
                          /*  battle_context(const unit_map &units,
@@ -379,15 +382,25 @@ void lp_ai::buildLPs()
 //DBG_AI << "new battle context: " << std::endl;
  
                          dmg_lp->set_boolean(j);
-                         dmg_lp->set_obj(j++, ((REAL)(i->hitpoints()) - defender.average_hp()) * i->cost() / i->max_hitpoints()); 
+                         dmg_lp->set_obj(j, ((REAL)(i->hitpoints()) - defender.average_hp()) * i->cost() / i->max_hitpoints()); 
 
-                         const REAL damage_expected = ((REAL)(a.damage)) * a.chance_to_hit * a.num_blows;
-                         const REAL damage_variance = ((REAL)(a.damage)) * a.damage * a.chance_to_hit *(100-a.chance_to_hit) * a.num_blows;
+                         const REAL damage_expected = ((REAL)(a.damage)) * a.chance_to_hit * a.num_blows / 100;
+                         const REAL damage_variance = ((REAL)(a.damage)) * a.damage * a.chance_to_hit *(100-a.chance_to_hit) * a.num_blows / 10000;
 
+                         DBG_AI << "col=" << *j << ": " << src << " -> " << dst << " \\> " << i->get_location() << " : Expected " << damage_expected << " , Variance " << damage_variance << std::endl;
+//                         DBG_AI << "pointing to " << *(k->second.second) <<std::endl;
                          k->second.first->set_boolean(k->second.second);
                          k->second.first->set_obj_num(k->second.second,damage_expected);
-                         k->second.first->set_obj_denom(k->second.second++,damage_variance);
-
+                         k->second.first->set_obj_denom(k->second.second,damage_variance);
+//#ifdef MCLP_FILEOUT
+                         std::stringstream s1,s2,s3;
+                         s1 << src; s2 << dst; s3 << target;
+                         sprintf(cstr, "(%s->%s\\>%s)", s1.str().c_str(), s2.str().c_str(), s3.str().c_str());
+                         dmg_lp->set_col_name(j, cstr);//lp_solve::set_col_name(lp, j, cstr);
+                         k->second.first->set_col_name(k->second.second, cstr);
+//#endif
+                         k->second.second++;
+                         j++;
                          //value of an attack is the expected gold-adjusted damage inflicted
                          ++range.first;
 //DBG_AI << "deleting: " << std::endl;
@@ -713,7 +726,7 @@ void lp_2_ai::play_turn()
                  DBG_AI << "Setting num constant... hit points =" << i->hitpoints() << std::endl;
 #endif
 
-                 lp->set_obj_num_constant(-(REAL) i->hitpoints() * 100); // * 100 because CTH is an integer
+                 lp->set_obj_num_constant(-(REAL) i->hitpoints()); // * 100 because CTH is an integer.. chaned for stability
 
 #ifdef MCLP_DEBUG
                  DBG_AI << "Set denom constant..." << std::endl;
@@ -752,8 +765,10 @@ void lp_2_ai::play_turn()
 
                          const battle_context_unit_stats a = bc->get_attacker_stats();
  
-                         const REAL damage_expected = (static_cast<REAL>(a.damage)) * a.chance_to_hit * a.num_blows;
-                         const REAL damage_variance = (static_cast<REAL>(a.damage)) * a.damage * a.chance_to_hit * (100-a.chance_to_hit) * a.num_blows;
+                         const REAL damage_expected = (static_cast<REAL>(a.damage)) * a.chance_to_hit * a.num_blows / 100;
+                         const REAL damage_variance = (static_cast<REAL>(a.damage)) * a.damage * a.chance_to_hit * (100-a.chance_to_hit) * a.num_blows / 10000;
+
+                         DBG_AI << src << " -> " << dst << " \\> " << i->get_location() << " : Expected " << damage_expected << " , Variance " << damage_variance << std::endl;
 
                          lp->set_obj_num(j,damage_expected);
                          lp->set_obj_denom(j,damage_variance);
