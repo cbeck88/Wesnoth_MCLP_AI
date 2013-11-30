@@ -40,7 +40,9 @@ as possible, using maximum slot efficiency. In a preliminary state.
 
 
 *These ais will not recruit or grab villages.* 
-You should load them from a savegame file which is already set up for an attack. This is most easily done using the tools in testsaves/. mclp_ai is the only one which is planned to do this eventually.
+You should load them from a savegame file which is already set up for an attack. This is most easily done using the tools in testsaves/. 
+
+mclp_ai is the only one which is planned to become a full-fledged ai which recruits and grabs villages.
 
 
 Other
