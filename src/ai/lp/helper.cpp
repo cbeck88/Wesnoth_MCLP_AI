@@ -58,8 +58,7 @@ typedef std::multimap<map_location,int>::iterator locItor;
 damageLP::damageLP():lp(), slotMap(), unitMap(), defenderMap(), Ncol(0),cols() {}
 ctkLP::ctkLP(map_location ml): defender(ml), lp(), slotMap(), unitMap(),Ncol(0),cols(),made(false), holdingnum(false), holdingdenom(false) {}
 
-damageLP::damageLP(damageLP & copy_from_me): lp(new LP(*copy_from_me.lp)),slotMap(copy_from_me.slotMap),unitMap(copy_from_me.unitMap),defenderMap(copy_from_me.defenderMap),
-Ncol(copy_from_me.Ncol),cols(copy_from_me.cols) {}
+//damageLP::damageLP(damageLP & copy_from_me): lp(new LP(*copy_from_me.lp)),slotMap(copy_from_me.slotMap),unitMap(copy_from_me.unitMap),defenderMap(copy_from_me.defenderMap),Ncol(copy_from_me.Ncol),cols(copy_from_me.cols) {}
 
 void damageLP::insert( const map_location src, const map_location dst, map_location target)
 {
@@ -90,21 +89,80 @@ void ctkLP::insert(map_location src, map_location dst)
     unitMap.insert(std::make_pair<const map_location,col_ptr> (src, ptr)); 
 }
 
+void damageLP::outputMapsAndCols()
+{
+//    std::stringstream s;
+//    s = DBG_AI;
+/*    DBG_AI << "Output maps and cols:" << std::endl;
+    typedef std::multimap<const map_location, col_ptr>::iterator map_itor;
+    map_itor it1,it2;
+    bool done = true;
+    it1 = slotMap.begin();
+    it2 = unitMap.begin();
+    if (it1 != slotMap.end()) { done = false; }
+    if (it2 != unitMap.end()) { done = false; }
+    while (!(done==true))
+    {
+        done = true;
+        if (it1 != slotMap.end())
+        { DBG_AI << it1->first << ": " << *(it1->second) << "\t\t"; it1++; done = false;}   
+        else 
+        {DBG_AI << "      " << ": " << "  " << "\t\t";}        
+        if (it2 != unitMap.end())
+        { DBG_AI << it2->first << ": " << *(it2->second) << "\n"; it2++; done = false;}   
+        else 
+        {DBG_AI << "      " << ": " << "  " << "\n";}
+    }                                */                                                                               
+//    DBG_AI << s.str() << std::endl;
+}   
+
+void ctkLP::outputMapsAndCols()
+{
+//    std::stringstream s;
+//    s = DBG_AI;
+/*    DBG_AI << "Output maps and cols:" << std::endl;
+    typedef std::multimap<const map_location, col_ptr>::iterator map_itor;
+    map_itor it1,it2;
+    bool done = true;
+    it1 = slotMap.begin();
+    it2 = unitMap.begin();
+    if (it1 != slotMap.end()) { done = false; }
+    if (it2 != unitMap.end()) { done = false; }
+    while (!(done==true))
+    {
+        done = true;
+        if (it1 != slotMap.end())
+        { DBG_AI << it1->first << ": " << *(it1->second) << "\t\t"; it1++; done = false;}   
+        else 
+        {DBG_AI << "      " << ": " << "  " << "\t\t";}        
+        if (it2 != unitMap.end())
+        { DBG_AI << it2->first << ": " << *(it2->second) << "\n"; it2++; done = false;}   
+        else 
+        {DBG_AI << "      " << ": " << "  " << "\n";}
+    }                                */                                                                               
+//    DBG_AI << s.str() << std::endl;
+}   
+
+
 #define remove_X(X) remove_ ## X (const map_location loc)                                                           \
 {                                                                                                                   \
-    DBG_AI << "called remove_ X " << std::endl;                                                                     \
+    DBG_AI << "called remove_" << #X << std::endl;                                                                     \
     DBG_AI << "Ncol = " << Ncol << " , lp->end() = " << lp->end() << std::endl;\
+    typedef std::multimap<const map_location, col_ptr>::iterator map_itor; \
+    map_itor it;\
+    std::pair<map_itor,map_itor> range; \
+    std::priority_queue<int> to_die;                                                                                \
     int temp = 0;                                                                                                   \
     for (col_ptr ptr = cols.begin(); ptr != cols.end(); ++ptr)                                                      \
     {                                                                                                               \
         (*ptr)=++temp;                                                                                              \
     }                                                                                                               \
+    outputMapsAndCols();\
     DBG_AI << "initial condition has Ncol = " << Ncol << " and temp = " << temp << " and size = " << cols.size() << std::endl; \
-    std::pair<std::multimap<const map_location, col_ptr>::iterator,std::multimap<const map_location, col_ptr>::iterator> range; \
-    std::priority_queue<int> to_die;                                                                                \
     for (range = X ## Map.equal_range(loc); range.first != range.second; ++range.first)                             \
     {                                                                                                               \
         temp = *(range.first->second);                                                                              \
+        DBG_AI << "to_die.push(" << temp << ");" << std::endl;              \
         assert(0 < temp);                                                                                           \
         assert(temp <= Ncol);                                                                                       \
         to_die.push(temp);                                                                                          \
@@ -120,12 +178,18 @@ void ctkLP::insert(map_location src, map_location dst)
     temp = 0;                                                                                                       \
     for (col_ptr ptr = cols.begin(); ptr != cols.end(); ++ptr)                                                      \
     {                                                                                                               \
+        DBG_AI << " *ptr was " << *ptr << std::endl;\
         (*ptr)=++temp;                                                                                              \
+        DBG_AI << " *ptr = " << *ptr << std::endl;\
     }                                                                                                               \
     DBG_AI << "postcondition has Ncol = " << Ncol << " and temp = " << temp << " and lp->end() = " << lp->end() << std::endl; \
+    outputMapsAndCols();\
+    for (col_ptr ptr = cols.begin(); ptr != cols.end(); ++ptr)                                                      \
+    {                                                                                                               \
+        DBG_AI << " *ptr = " << (*ptr) << std::endl;                                                                \
+    }                                                                                                               \
     assert(Ncol == temp);                                                                                           \
 }
-//        DBG_AI << "to_die.push(" << temp << ");" << std::endl;              \
 //        DBG_AI << "delete_col(" << to_die.top() << ");" << std::endl;       \
 
 //    for (range = X ## Map.equal_range(loc); range.first != range.second; ++range.first)                             \
@@ -347,6 +411,44 @@ REAL damageLP::get_obj()
 REAL ctkLP::get_obj()
 {
     return lp->get_obj();
+}
+
+REAL damageLP::get_obj_without(map_location unit, map_location slot)
+{
+    typedef std::multimap<const map_location, col_ptr>::iterator map_itor; 
+    map_itor it;
+    std::pair<map_itor,map_itor> range; 
+    std::priority_queue<int> to_die;                                                                                
+
+    boost::shared_ptr<LP> templp(new LP(*lp));
+    int temp = 0;                                                                                                   
+    for (range = unitMap.equal_range(unit); range.first != range.second; ++range.first)                             
+    {                                                                                                               
+        temp = *(range.first->second);                                                                              
+        //DBG_AI << "to_die.push(" << temp << ");" << std::endl;              
+        assert(0 < temp);                                                                                           
+        assert(temp <= Ncol);                                                                                       
+        to_die.push(temp);                                                                                          
+    }                                                                                                               
+    for (range = slotMap.equal_range(slot); range.first != range.second; ++range.first)                             
+    {                                                                                                               
+        temp = *(range.first->second);                                                                              
+        //DBG_AI << "to_die.push(" << temp << ");" << std::endl;              
+        assert(0 < temp);                                                                                           
+        assert(temp <= Ncol);                                                                                       
+        to_die.push(temp);                                                                                          
+    }                                                                                                               
+    temp = -1000000;
+    while (!to_die.empty())                                                                                         
+    {              
+        if(to_die.top()!=temp) { //don't delete same column twice
+            templp->delete_col(to_die.top());
+            temp = to_die.top();
+        }
+        to_die.pop();                                                                                               
+    } 
+    templp->solve();
+    return templp->get_obj();
 }
 
 REAL damageLP::get_var(fwd_ptr ptr)

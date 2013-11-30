@@ -44,8 +44,8 @@ FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
 
     assert(lp != NULL);
 
-    DBG_AI << "Just constructed, here's GETLOWBO:" << std::endl;
-    SPAM_GET_LOWBO
+//    DBG_AI << "Just constructed, here's GETLOWBO:" << std::endl;
+//    SPAM_GET_LOWBO
     //Now add fractional constraint: t >= 0;
     //Apparently lowbo = 0 is the default... see the API, very strange. Actually I don't believe them.
 #ifdef LP_SET_LOWBO
@@ -58,8 +58,8 @@ FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
     lp_solve::set_col_name(lp, n+1, (char *)"t");
 #endif
 
-    DBG_AI << "set Ncol+1" << (Ncol+1) << ", here's GETLOWBO:" << std::endl;
-    SPAM_GET_LOWBO
+//    DBG_AI << "set Ncol+1" << (Ncol+1) << ", here's GETLOWBO:" << std::endl;
+//    SPAM_GET_LOWBO
 }
 
 //Turn this back on after fixed memory problems.
@@ -73,7 +73,7 @@ FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
 
 LP::LP(LP& copy_from_me)
 {
-    DBG_AI << "LP_copy: incoming Ncol = " << copy_from_me.Ncol << std::endl;
+//    DBG_AI << "LP_copy: incoming Ncol = " << copy_from_me.Ncol << std::endl;
     Ncol = copy_from_me.Ncol;
     vars = NULL;
     lp = lp_solve::copy_lp(copy_from_me.lp);
@@ -130,13 +130,13 @@ unsigned char FracLP::delete_col(int col)
 
 unsigned char LP::finishRows()
 {
-#ifdef MCLP_DEBUG
-    if (lp_solve::is_add_rowmode(lp) == LP_SOLVE_TRUE)
+//#ifdef MCLP_DEBUG
+    if (lp_solve::is_add_rowmode(lp) == LP_SOLVE_FALSE)
     {
         DBG_AI << "LP::finishRows already had rowmode false... returning." << std::endl;
         return LP_SOLVE_TRUE;
     }
-#endif
+//#endif
     if (lp_solve::set_add_rowmode(lp,LP_SOLVE_FALSE) != LP_SOLVE_TRUE) {
         ERR_AI << "LP::finishRows failed to set rowmode to false" << std::endl; 
         return LP_SOLVE_FALSE;
@@ -171,10 +171,13 @@ unsigned char LP::solve()
 
 unsigned char FracLP::finishRows()
 {
-#ifdef MCLP_DEBUG
-    DBG_AI << "LP::finishRows(), here's GETLOWBO:" << std::endl;
-    SPAM_GET_LOWBO
-#endif
+//#ifdef MCLP_DEBUG
+    if (lp_solve::is_add_rowmode(lp) == LP_SOLVE_FALSE)
+    {
+        DBG_AI << "FracLP::finishRows already had rowmode false... returning." << std::endl;
+        return LP_SOLVE_TRUE;
+    }
+//#endif
 
     if (lp_solve::set_add_rowmode(lp,LP_SOLVE_FALSE) != LP_SOLVE_TRUE) {
         ERR_AI << "FracLP::finishRows failed to set rowmode to false" << std::endl; 
@@ -284,7 +287,7 @@ REAL LP::get_var(int i)
 
 REAL FracLP::get_var(int i)
 {
-    DBG_AI << "FracLP::get_var() -- denom_row[Ncol] = " << denom_row[Ncol] << " -- not_solved_yet = " << not_solved_yet << std::endl;
+//    DBG_AI << "FracLP::get_var() -- denom_row[Ncol] = " << denom_row[Ncol] << " -- not_solved_yet = " << not_solved_yet << std::endl;
     if (not_solved_yet == true) {ERR_AI << "FracLP::get_var before solve" << std::endl; return 0;}
     return denom_row[i-1]/denom_row[Ncol];
 }
@@ -302,7 +305,7 @@ REAL LP::get_obj()
 
 REAL FracLP::get_obj()
 {
-    DBG_AI << "FracLP::get_obj: not_solved_yet = " << not_solved_yet << std::endl;    
+//    DBG_AI << "FracLP::get_obj: not_solved_yet = " << not_solved_yet << std::endl;    
     return lp_solve::get_objective(lp);
 }
 

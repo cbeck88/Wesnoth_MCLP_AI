@@ -33,7 +33,7 @@ typedef std::list<int>::iterator fwd_ptr;
 class damageLP {
 public:
     damageLP();
-    damageLP(damageLP&);
+    //damageLP(damageLP&); //this is a bad idea, can't copy the pointer structures around easily.
     //~damageLP() { DBG_AI << "~damageLP();" << std::endl; } // if (lp != NULL) { delete(lp); } }
 
     void insert( map_location src, map_location dst, map_location def);
@@ -58,6 +58,8 @@ public:
 
     unsigned char write_lp (char *);
 
+    REAL get_obj_without(map_location unit, map_location slot);
+
     typedef fwd_ptr iterator;
 
 private:
@@ -72,6 +74,8 @@ private:
 
     //Rather than store ints for columns, store pointers to this list so we can delete easily.
     std::list<int> cols;
+
+    void outputMapsAndCols();
 };
 
 /** A class that manages an LP which estimates opt ctk for a target. **/
@@ -133,6 +137,7 @@ private:
     bool holdingnum;
     bool holdingdenom;
 //    fwd_ptr bool_ptr;
+    void outputMapsAndCols();
 };
 
 }

@@ -151,15 +151,15 @@ void lp_ai::play_turn()
                 const map_location& dst = range.first->first;
                 const map_location& src = range.first->second;         
                 //y = xt, so divide by t which is in row[Ncol]. if this is > 0 then move.
-                DBG_AI << "Value" << (REAL)(best->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target; 
 
                 if (best->second.first->var_gtr(j,.1)) {//((row[j++]/row[Ncol]) > .01) { 
-                    DBG_AI << "**" << std::endl; //src << " -> " << dst << " \\> " << i->get_location() << std::endl; 
-                    templp.reset(new damageLP(*dmg_lp));
-                    templp->remove_unit(src);
-                    templp->remove_slot(dst);
-                    templp->solve();
-                    this_opt = templp->get_obj();
+                    DBG_AI << "Value" << (REAL)(best->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target << "**" << std::endl; 
+                    //templp.reset(new damageLP(*dmg_lp));
+                    //templp->remove_unit(src);
+                    //templp->remove_slot(dst);
+                    //templp->solve();
+                    //this_opt = templp->get_obj();
+                    this_opt = dmg_lp->get_obj_without(src, dst);
                     if (this_opt > current_opt)
                     {
                         DBG_AI << "***found a new best move: " << src << " -> " << dst << " \\> " << best_target << std::endl; 
@@ -171,7 +171,7 @@ void lp_ai::play_turn()
 //                    move_result_ptr mr = execute_move_action(src, dst); //best_moves_list.push_back(std::make_pair<map_location, map_location> (src, dst));
 //                    attack_result_ptr ar = execute_attack_action(dst, best_target,-1);
                 } else //{execute_move_action(src, dst, false, true);}
-                {DBG_AI << std::endl;}
+                {DBG_AI << "Value" << (REAL)(best->second.first->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << best_target << std::endl;} 
                 ++range.first;
                 ++j;
             }
@@ -181,7 +181,8 @@ void lp_ai::play_turn()
         double runtime_diff_ms = (c1 - c0) * 1000. / CLOCKS_PER_SEC;
         DBG_AI << "Finish lp_ai::play_turn(), took "<< runtime_diff_ms << " ms." << std::endl;
 
-        if (current_opt > 1) {
+//        if (current_opt > 1) {
+        if (current_opt > -100000) {
             move_result_ptr mr = execute_move_action(best_src,best_dst);
             if (mr->is_ok()) {
                 attack_result_ptr ar = execute_attack_action(best_dst,best_target,-1);
@@ -330,11 +331,11 @@ void lp_ai::buildLPs()
 
         for(i = units_->begin(); i != units_->end(); ++i) {
             if(current_team().is_enemy(i->side()) && !i->incapacitated()) {        
-DBG_AI << "getting target location: " << std::endl;
+//DBG_AI << "getting target location: " << std::endl;
                  target = i->get_location();
-DBG_AI << "getting ctk_lp associated: " << std::endl;
+//DBG_AI << "getting ctk_lp associated: " << std::endl;
                  k = ctk_lps.find(target);
-DBG_AI << "getting adjacent tiles: " << std::endl;
+//DBG_AI << "getting adjacent tiles: " << std::endl;
                  get_adjacent_tiles(target,adjacent_tiles);
                  for(size_t n = 0; n != 6; ++n) {
                      range = dstsrc.equal_range(adjacent_tiles[n]);
@@ -343,10 +344,10 @@ DBG_AI << "getting adjacent tiles: " << std::endl;
                          const map_location& dst = range.first->first;
                          const map_location& src = range.first->second;
                          //these are dst and src for the attacking unit
-DBG_AI << "got src dst: " << std::endl;
+//DBG_AI << "got src dst: " << std::endl;
 
                          const unit_map::const_iterator un = units_->find(src);
-DBG_AI << "got src unit: " << std::endl;
+//DBG_AI << "got src unit: " << std::endl;
 
                          assert(un != units_->end()); //this assertion was failing and i'm not sure why.
 
@@ -365,23 +366,23 @@ DBG_AI << "got src unit: " << std::endl;
 					               double aggression = 0.0, const combatant *prev_def = NULL,
 					               const unit* attacker_ptr=NULL);
                               */
-DBG_AI << "new battle context: " << std::endl;
+//DBG_AI << "new battle context: " << std::endl;
                          battle_context *bc_ = new battle_context(*units_, dst, target, -1, -1, 0.0, NULL, &(*un));
                          const battle_context_unit_stats a = bc_->get_attacker_stats();
 
-DBG_AI << "fight: " << std::endl;
+//DBG_AI << "fight: " << std::endl;
 
                          //This code later in attack::perform() in attack.cpp
                          combatant attacker(bc_->get_attacker_stats());
                          combatant defender(bc_->get_defender_stats());
                          attacker.fight(defender,false);
-DBG_AI << "new battle context: " << std::endl;
+//DBG_AI << "new battle context: " << std::endl;
  
                          dmg_lp->set_boolean(j);
                          dmg_lp->set_obj(j++, ((REAL)(i->hitpoints()) - defender.average_hp()) * i->cost() / i->max_hitpoints()); 
 
                          const REAL damage_expected = ((REAL)(a.damage)) * a.chance_to_hit * a.num_blows;
-                         const REAL damage_variance = ((REAL)(a.damage)) * a.damage * a.chance_to_hit * a.num_blows;
+                         const REAL damage_variance = ((REAL)(a.damage)) * a.damage * a.chance_to_hit *(100-a.chance_to_hit) * a.num_blows;
 
                          k->second.first->set_boolean(k->second.second);
                          k->second.first->set_obj_num(k->second.second,damage_expected);
@@ -389,7 +390,7 @@ DBG_AI << "new battle context: " << std::endl;
 
                          //value of an attack is the expected gold-adjusted damage inflicted
                          ++range.first;
-DBG_AI << "deleting: " << std::endl;
+//DBG_AI << "deleting: " << std::endl;
 
                          delete(bc_);
                      }
@@ -752,7 +753,7 @@ void lp_2_ai::play_turn()
                          const battle_context_unit_stats a = bc->get_attacker_stats();
  
                          const REAL damage_expected = (static_cast<REAL>(a.damage)) * a.chance_to_hit * a.num_blows;
-                         const REAL damage_variance = (static_cast<REAL>(a.damage)) * a.damage * a.chance_to_hit * a.num_blows;
+                         const REAL damage_variance = (static_cast<REAL>(a.damage)) * a.damage * a.chance_to_hit * (100-a.chance_to_hit) * a.num_blows;
 
                          lp->set_obj_num(j,damage_expected);
                          lp->set_obj_denom(j,damage_variance);
@@ -813,13 +814,12 @@ void lp_2_ai::play_turn()
                               const map_location& dst = range.first->first;
                               const map_location& src = range.first->second;         
                               //y = xt, so divide by t which is in row[Ncol]. if this is > 0 then move.
-                              DBG_AI << "Value" << (REAL)(lp->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << i->get_location(); 
-
+                              //DBG_AI << "Value" << (REAL)(lp->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << i->get_location(); 
                               if (lp->var_gtr(j,.1)) {//((row[j++]/row[Ncol]) > .01) { 
+                                  DBG_AI << "Value" << (REAL)(lp->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << i->get_location() << "**" << std::endl; 
                                   best_moves_list.push_back(std::make_pair<map_location, map_location> (src, dst));
-                                  DBG_AI << "**"; //src << " -> " << dst << " \\> " << i->get_location() << std::endl; 
                               }//{execute_move_action(src, dst, false, true);}
-                              DBG_AI << std::endl;
+                              else DBG_AI << "Value" << (REAL)(lp->get_var(j)) << " | " <<  src << " -> " << dst << " \\> " << i->get_location() << std::endl; 
                               ++range.first;
                               ++j;
                           }
