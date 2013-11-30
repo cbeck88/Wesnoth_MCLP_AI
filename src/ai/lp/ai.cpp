@@ -514,13 +514,13 @@ void mclp_ai::play_turn()
                          const map_location& src = range.first->second;         
                          //columns numbered from 1 in lib lp_solve
                          LOG_AI << "MCLP_AI Scoring: " << src << " -> " << dst << " \\> " << i->get_location() << std::endl;
-                         this_opt = mc_score(src,dst, i->get_location(), 10);
+                         this_opt = mc_score(src,dst, i->get_location(), 2);
                          LOG_AI << "score = "  << this_opt << std::endl;
 
                          if (this_opt > current_opt)
                          {
-                             LOG_AI << "***found a new best move: " << src << " -> " << dst << " \\> " << best_target << std::endl; 
-                             current_opt = this_opt; best_src = src; best_dst = dst;
+                             LOG_AI << "***found a new best move: " << src << " -> " << dst << " \\> " << i->get_location() << std::endl; 
+                             current_opt = this_opt; best_src = src; best_dst = dst; best_target = i->get_location();
                          }
                          else {
                              LOG_AI << "not as good..."<< std::endl;
@@ -564,6 +564,7 @@ REAL mclp_ai::mc_score(const map_location src = map_location::null_location, con
         update_locker lock_update(resources::screen->video());
 
         for (int cnt = 0; cnt < repetitions; cnt++) {
+            LOG_AI << "cnt = " << cnt << std::endl;
             if ((src != map_location::null_location) && (dst != map_location::null_location)) {
                 move_result_ptr mr = execute_move_action(src,dst);
                 if (mr->is_ok()) {
@@ -965,7 +966,7 @@ void lp_2_ai::play_turn()
 #endif
                  if(ret != LP_SOLVE_OPTIMAL)
                  {
-                        DBG_AI << "**** NOT OPTIMAL: Code = " << ret << ":"<< lp_solve::SOLVE_CODE(ret) << "****" << std::endl;
+                        LOG_AI << "**** NOT OPTIMAL: Code = " << (int) ret << ":"<< lp_solve::SOLVE_CODE(ret) << "****" << std::endl;
                  }
 #ifdef MCLP_DEBUG
                  DBG_AI << "Getting vars..." << std::endl;

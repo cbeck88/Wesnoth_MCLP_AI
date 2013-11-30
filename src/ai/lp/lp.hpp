@@ -77,7 +77,7 @@ class LP /*: public Boolean_Program*/ {
 public:
     LP(int);
     LP(LP & );
-    //~LP() { if (lp != NULL) {lp_solve::delete_lp(lp);}}
+    ~LP() { if (lp != NULL) {lp_solve::delete_lp(lp);}}
     //turn this back on after fixed memory problems   
 
     unsigned char finishRows();
@@ -105,7 +105,7 @@ class FracLP /*: public Boolean_Program*/ {
 public:
     FracLP(int n);
     //Turn this back on after fixed memory problems.
-    //~FracLP(); // { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
+    ~FracLP(); // { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
     //~FracLP();
 
     unsigned char finishRows();

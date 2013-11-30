@@ -63,7 +63,7 @@ FracLP::FracLP(int n): Ncol(n),lp(NULL),not_solved_yet(true)
 }
 
 //Turn this back on after fixed memory problems.
-//FracLP::~FracLP() { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
+FracLP::~FracLP() { if (lp != NULL) {lp_solve::delete_lp(lp);} if (denom_row != NULL) {free(denom_row);}}
 
 //FracLP::~FracLP() {
 //#ifdef MCLP_DEBUG
@@ -159,7 +159,7 @@ unsigned char LP::solve()
 
     unsigned char ret = lp_solve::solve(lp);
     if (ret != LP_SOLVE_OPTIMAL) {
-        ERR_AI << "LP::solve() solve gave an error code " << ret << std::endl;
+        ERR_AI << "LP::solve() solve gave an error code " << (int) ret << std::endl;
     }
 
 //Going to move this to get_var
