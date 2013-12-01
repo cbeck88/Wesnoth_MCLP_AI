@@ -379,7 +379,7 @@ unsigned char damageLP::set_boolean(fwd_ptr ptr)
             lp->set_boolean(*bool_ptr);
         }
     }*/
-unsigned char damageLP::solve()
+int damageLP::solve()
 {
     return lp->solve();
 }
@@ -399,7 +399,7 @@ unsigned char ctkLP::set_boolean(fwd_ptr ptr)
         }
     }*/
 
-unsigned char ctkLP::solve()
+int ctkLP::solve()
 {
     return lp->solve();
 }
@@ -477,6 +477,26 @@ unsigned char ctkLP::write_lp(char * file)
     return lp->write_lp(file);
 }
 
+//*************************************************************
+// LP_AI_TACTICS
+//*************************************************************
+
+LP_AI_TACTICS::LP_AI_TACTICS() {}
+void LP_AI_TACTICS::insert( map_location src, map_location dst, map_location target, int weapon) {}
+void LP_AI_TACTICS::remove_slot( map_location dst) {}
+void LP_AI_TACTICS::remove_unit( map_location unit) {}
+
+int begin() {return 0;}// { return cols.begin(); }
+int end() {return 0;} //{ return cols.end(); }
+
+int LP_AI_TACTICS::solve() {return 0;}
+
+REAL LP_AI_TACTICS::get_obj() {return 0;}
+REAL LP_AI_TACTICS::get_var(int) {return 0;}
+bool LP_AI_TACTICS::var_gtr(int, REAL) {return 0;}
+
+unsigned char LP_AI_TACTICS::write_lp (char *) {return 0;}
+    
 
 //*************************************************************
 // END Implementation of LP wrappers

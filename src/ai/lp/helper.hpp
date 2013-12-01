@@ -140,6 +140,39 @@ private:
     void outputMapsAndCols();
 };
 
-}
+class LP_AI_TACTICS {
+public:
+    LP_AI_TACTICS();
+    void insert( map_location src, map_location dst, map_location target, int weapon);
+    void remove_slot( map_location dst);
+    void remove_unit( map_location unit); 
+
+    fwd_ptr begin();// { return cols.begin(); }
+    fwd_ptr end(); //{ return cols.end(); }
+
+    int solve();
+
+    REAL get_obj();
+    REAL get_var(fwd_ptr);
+    bool var_gtr(fwd_ptr, REAL);
+
+    unsigned char write_lp (char *);
+    
+    typedef fwd_ptr iterator;
+
+private:
+    struct attack_record {
+        const map_location src;
+        const map_location dst;
+        const map_location target;
+        const int weapon;
+        int column;
+
+        std::pair< map_location, attack_record* > unit_ptr;
+        std::pair< map_location, attack_record* > slot_ptr;
+        attack_record* next;
+    };
+    attack_record* first;        
+};
 
 #endif

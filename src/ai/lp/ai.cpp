@@ -514,7 +514,7 @@ void mclp_ai::play_turn()
                          const map_location& src = range.first->second;         
                          //columns numbered from 1 in lib lp_solve
                          LOG_AI << "MCLP_AI Scoring: " << src << " -> " << dst << " \\> " << i->get_location() << std::endl;
-                         this_opt = mc_score(src,dst, i->get_location(), 25);
+                         this_opt = mc_score(src,dst, i->get_location(), 2);
                          LOG_AI << "score = "  << this_opt << std::endl;
 
                          if (this_opt > current_opt)

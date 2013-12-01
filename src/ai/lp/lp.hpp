@@ -88,7 +88,7 @@ public:
     int end() {return Ncol;}
     
     unsigned char set_obj(int, REAL);
-    unsigned char solve();
+    int solve();
 
     unsigned char set_col_name(int, char*);   
     REAL get_var(int);
@@ -120,7 +120,7 @@ public:
     unsigned char set_obj_num_constant(REAL);
     unsigned char set_obj_denom_constant(REAL);
 
-    unsigned char solve();
+    int solve();
 
     unsigned char set_col_name(int, char*);    
     REAL get_var(int);

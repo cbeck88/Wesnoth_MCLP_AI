@@ -144,7 +144,7 @@ unsigned char LP::finishRows()
     return LP_SOLVE_TRUE;
 }
 
-unsigned char LP::solve()
+int LP::solve()
 {
     lp_solve::set_maxim(lp);
     lp_solve::set_verbose(lp, LP_SOLVE_LOG_MODE);
@@ -157,7 +157,7 @@ unsigned char LP::solve()
         }
     } //the template file suggested to turn this off before solving.
 
-    unsigned char ret = lp_solve::solve(lp);
+    int ret = lp_solve::solve(lp);
     if (ret != LP_SOLVE_OPTIMAL) {
         ERR_AI << "LP::solve() solve gave an error code " << (int) ret << std::endl;
     }
@@ -186,7 +186,7 @@ unsigned char FracLP::finishRows()
     return LP_SOLVE_TRUE;
 }
 
-unsigned char FracLP::solve()
+int FracLP::solve()
 {
 //    DBG_AI << "FracLP::solve()'ing." << std::endl;
 
@@ -228,9 +228,9 @@ unsigned char FracLP::solve()
 
     lp_solve::set_maxim(lp);
     lp_solve::set_verbose(lp, LP_SOLVE_LOG_MODE);
-    //lp_solve::set_scaling(lp, LP_SOLVE_SCALE_NONE);
+    lp_solve::set_scaling(lp, LP_SOLVE_SCALE_NONE);
 
-    unsigned char ret = lp_solve::solve(lp);
+    int ret = lp_solve::solve(lp);
     if (ret != LP_SOLVE_OPTIMAL) {
         ERR_AI << "FracLP::solve() solve gave an error code " << ret  << "= \"" << lp_solve::SOLVE_CODE(ret) << "\". Full debugging:" << std::endl;
         lp_solve::set_verbose(lp, LP_SOLVE_FULL);

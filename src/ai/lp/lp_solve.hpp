@@ -44,8 +44,9 @@ namespace lp_solve
         //unsigned char write_LP(lprec*, FILE*);
         unsigned char write_lp(lprec*, char*);
 
-        const char * SOLVE_CODE (int code);
     }
+
+    const char * SOLVE_CODE (int code);
 }
 //codes for ADD_CONSTRAINT
 #define LP_SOLVE_LE 1 //int LE = 1;
