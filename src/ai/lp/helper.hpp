@@ -51,7 +51,7 @@ public:
     unsigned char set_obj (fwd_ptr, REAL );
     unsigned char set_col_name (fwd_ptr, char *);
 
-    unsigned char solve();
+    int solve();
 
     REAL get_obj();
     REAL get_var(fwd_ptr);
@@ -107,7 +107,7 @@ public:
     unsigned char set_obj_denom_constant(REAL );
     unsigned char set_col_name (fwd_ptr, char *);
 
-    unsigned char solve();
+    int solve();
 
     REAL get_obj();
     REAL get_var(fwd_ptr);
