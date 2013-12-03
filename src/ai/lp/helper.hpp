@@ -143,7 +143,7 @@ private:
 class LP_AI_TACTICS {
 public:
     LP_AI_TACTICS();
-    void insert( map_location src, map_location dst, map_location target, int weapon);
+    void insert( const map_location src, const map_location dst, const map_location target, const int weapon);
     void remove_slot( map_location dst);
     void remove_unit( map_location unit); 
 
@@ -173,6 +173,11 @@ private:
         attack_record* next;
     };
     attack_record* first;        
+    attack_record* last;
+
+    int Ncol;
+    std::multimap< map_location, attack_record* > unitMap;
+    std::multimap< map_location, attack_record* > slotMap;
 };
 
 #endif

@@ -481,8 +481,16 @@ unsigned char ctkLP::write_lp(char * file)
 // LP_AI_TACTICS
 //*************************************************************
 
-LP_AI_TACTICS::LP_AI_TACTICS() {}
-void LP_AI_TACTICS::insert( map_location src, map_location dst, map_location target, int weapon) {}
+LP_AI_TACTICS::LP_AI_TACTICS():unitMap(), slotMap(), Ncol(0) {
+    first = new attack_record(map_location::null_location, map_location::null_location, map_location::null_location, -1, 0, NULL, NULL, NULL);
+    last = first;
+}
+void LP_AI_TACTICS::insert( const map_location src, const map_location dst, const map_location target, const int weapon) 
+{
+    last.next = new attack_record (src, dst, target, weapon, ++Ncol, NULL, NULL, NULL);
+    unitMap.insert(std::make_pair( src, last.next );
+    slotMap.insert(std::make_pair( dst, last.next );
+}
 void LP_AI_TACTICS::remove_slot( map_location dst) {}
 void LP_AI_TACTICS::remove_unit( map_location unit) {}
 
