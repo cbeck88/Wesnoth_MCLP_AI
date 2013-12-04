@@ -1,7 +1,7 @@
 #ifndef AI_LP_SOLVE_HPP_INCLUDED
 #define AI_LP_SOLVE_HPP_INCLUDED
 
-#include "MCLP_FLAGS.hpp"
+#include "MCLP_flags.hpp"
 
 #ifdef MCLP_DEBUG
 #define LP_SOLVE_LOG_MODE LP_SOLVE_FULL

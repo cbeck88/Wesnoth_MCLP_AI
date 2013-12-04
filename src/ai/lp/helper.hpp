@@ -1,7 +1,7 @@
 #ifndef AI_LP_HELPER_HPP_INCLUDED
 #define AI_LP_HELPER_HPP_INCLUDED
 
-#include "MCLP_FLAGS.hpp"
+#include "MCLP_flags.hpp"
 
 #include "../../map_location.hpp"
 
