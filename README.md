@@ -75,7 +75,7 @@ I assume that you already have the ability to compile wesnoth from source. If no
 MCLP AI is essentially a branch of wesnoth-old. I just give it its own github repository like this to keep it at a 
 manageable size.
 
-To build MCLP AI, 
+To build MCLP AI, (lasted tested at wesnoth commit: 5a0952a9fe6703623d4f528ca09)
 
 1. Make a folder to hold both projects, e.g. ~/wesnoth-src. Clone wesnoth-old and Wesnoth\_MCLP\_AI into this folder.
 
